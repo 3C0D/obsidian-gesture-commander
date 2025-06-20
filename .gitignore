@@ -1,0 +1,33 @@
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+package-lock.json
+
+# yarn - keep yarn.lock for version consistency
+# yarn.lock
+
+# Don't include the compiled main.js file in the repo.
+# They should be uploaded to GitHub releases instead.
+main.js
+
+# Exclude sourcemaps
+*.map
+
+# obsidian
+data.json
+
+# Exclude macOS Finder (System Explorer) View States
+.DS_Store
+
+# scss result
+main.css
+
+# VSCode - keep settings.json for yarn protection
+.vscode/*
+!.vscode/settings.json
+
+# Keep injection info for traceability
+# .injection-info.json should be committed to track injection version

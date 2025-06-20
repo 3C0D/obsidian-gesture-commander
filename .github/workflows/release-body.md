@@ -1,0 +1,1 @@
+Updated plugin with latest obsidian-plugin-config injection system
