@@ -394,7 +394,7 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
     input.type = 'file';
     input.accept = '.json';
 
-    input.onchange = async (e) => {
+    input.onchange = async (e): Promise<void>  => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
