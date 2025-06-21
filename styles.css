@@ -1,1 +1,383 @@
-/* ccc */ 
+/* Gesture Commander Plugin Styles */
+
+/* Gesture canvas container */
+.gesture-canvas-container {
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.gesture-canvas-container h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--text-normal);
+}
+
+.gesture-canvas-container canvas {
+    border: 2px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    cursor: crosshair;
+    display: block;
+    margin: 12px auto;
+    transition: border-color 0.2s ease;
+}
+
+.gesture-canvas-container canvas:hover {
+    border-color: var(--interactive-accent);
+}
+
+/* Gesture mappings container */
+.gesture-mappings-container {
+    margin-top: 16px;
+}
+
+.gesture-mapping-item {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.gesture-mapping-item:hover {
+    background: var(--background-modifier-hover);
+}
+
+.gesture-mapping-item .setting-item {
+    border: none;
+    padding: 0;
+}
+
+.gesture-mapping-item .setting-item-name {
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.gesture-mapping-item .setting-item-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* Modal buttons */
+.gesture-modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.gesture-modal-buttons button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gesture-modal-buttons button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
+
+.gesture-modal-buttons button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.gesture-modal-buttons button.mod-cta:hover {
+    background: var(--interactive-accent-hover);
+    border-color: var(--interactive-accent-hover);
+}
+
+/* Visual feedback for gesture drawing */
+.gesture-trail {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    border: 2px solid var(--interactive-accent);
+    border-radius: 50%;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.gesture-trail.fade-out {
+    opacity: 0;
+}
+
+/* Settings sections */
+.setting-item h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--text-normal);
+    font-size: 1.1em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 4px;
+}
+
+/* Modifier keys indicators */
+.modifier-keys-status {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.modifier-key {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-family: var(--font-monospace);
+    color: var(--text-muted);
+}
+
+.modifier-key.active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+/* Gesture recognition feedback */
+.gesture-feedback {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10001;
+    max-width: 300px;
+    animation: slideInRight 0.3s ease;
+}
+
+.gesture-feedback.success {
+    border-color: var(--color-green);
+    background: var(--background-primary);
+}
+
+.gesture-feedback.error {
+    border-color: var(--color-red);
+    background: var(--background-primary);
+}
+
+.gesture-feedback-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-normal);
+}
+
+.gesture-feedback-message {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Import/Export section */
+.import-export-section {
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.import-export-section .setting-item {
+    border: none;
+}
+
+/* Gesture list empty state */
+.gesture-list-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.gesture-list-empty::before {
+    content: "✋";
+    display: block;
+    font-size: 2em;
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .gesture-canvas-container canvas {
+        width: 100%;
+        max-width: 350px;
+        height: auto;
+    }
+
+    .gesture-modal-buttons {
+        flex-direction: column;
+    }
+
+    .gesture-modal-buttons button {
+        width: 100%;
+    }
+
+    .gesture-feedback {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* Dark theme adjustments */
+.theme-dark .gesture-canvas-container canvas {
+    background: var(--background-primary-alt);
+}
+
+.theme-dark .gesture-trail {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 8px rgba(var(--interactive-accent-rgb), 0.3);
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .gesture-canvas-container canvas {
+        border-width: 3px;
+    }
+
+    .gesture-trail {
+        border-width: 3px;
+    }
+
+    .modifier-key {
+        border-width: 2px;
+    }
+}
+
+/* Command suggester styles */
+.suggestion-container {
+    min-width: 300px !important;
+    max-width: 500px !important;
+    width: auto !important;
+}
+
+.command-suggestion {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.command-suggestion:last-child {
+    border-bottom: none;
+}
+
+.command-suggestion-name {
+    font-weight: 500;
+    color: var(--text-normal);
+    margin-bottom: 2px;
+    word-wrap: break-word;
+}
+
+.command-suggestion-id {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+    word-wrap: break-word;
+}
+
+/* Ensure suggester has proper width */
+.suggestion-item {
+    min-width: 300px;
+    max-width: 500px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Override default suggester styles for better width */
+.suggestion {
+    min-width: 300px !important;
+    max-width: 500px !important;
+}
+
+/* Gesture preview in settings */
+.gesture-preview {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-secondary);
+    margin-right: 8px;
+    vertical-align: middle;
+    position: relative;
+    overflow: hidden;
+}
+
+.gesture-preview canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.gesture-preview-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Gesture mapping improvements */
+.gesture-mapping-item .setting-item-name {
+    display: flex;
+    align-items: center;
+}
+
+.gesture-mapping-item .gesture-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.gesture-mapping-item .gesture-score {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .gesture-trail,
+    .gesture-feedback,
+    .gesture-modal-buttons button,
+    .command-search-item {
+        transition: none;
+    }
+
+    @keyframes slideInRight {
+
+        from,
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+}
