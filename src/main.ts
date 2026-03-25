@@ -1,161 +1,146 @@
-import {
-  Plugin,
-  Notice
-} from "obsidian";
-import { DollarRecognizer } from './gesture-recognizer.js';
-import { GestureCapture } from './gesture-capture.js';
-import type { GestureStroke } from './gesture-capture.js';
-import { GestureCommanderSettingTab, DEFAULT_SETTINGS } from './settings.js';
-import type { GestureCommanderSettings, GestureMapping } from './settings.js';
-import { GestureCreationModal } from './gesture-creation-modal.js';
+import { Plugin, Notice } from "obsidian";
+import { DollarRecognizer } from "./gesture-recognizer.ts";
+import { GestureCapture } from "./gesture-capture.ts";
+import { GestureCommanderSettingTab } from "./settings.ts";
+import { DEFAULT_SETTINGS } from "./constants.ts";
+import { GestureCreationModal } from "./gesture-creation-modal.ts";
+import { GestureManager } from "./gesture-manager.ts";
+import type {
+	GestureCommanderSettings,
+	GestureMapping,
+	GestureStroke,
+} from "./types.ts";
 
 export default class GestureCommanderPlugin extends Plugin {
-  settings: GestureCommanderSettings;
-  gestureRecognizer: DollarRecognizer;
-  gestureCapture: GestureCapture;
-  settingsTab: GestureCommanderSettingTab | null = null;
+	settings: GestureCommanderSettings;
+	gestureRecognizer: DollarRecognizer;
+	gestureCapture: GestureCapture;
+	gestureManager: GestureManager;
+	settingsTab: GestureCommanderSettingTab | null = null;
 
-  async onload(): Promise<void> {
-    console.log("Loading Gesture Commander plugin");
-    await this.loadSettings();
+	async onload(): Promise<void> {
+		await this.loadSettings();
 
-    // Initialize gesture recognizer
-    this.gestureRecognizer = new DollarRecognizer();
+		// Initialize gesture recognizer
+		this.gestureRecognizer = new DollarRecognizer();
 
-    // Reload saved gestures
-    this.reloadGestures();
+		// Initialize gesture manager
+		this.gestureManager = new GestureManager(
+			this.gestureRecognizer,
+			this.settings,
+			(commandId: string) => this.executeCommand(commandId),
+		);
 
-    // Initialize gesture capture
-    this.initializeGestureCapture();
+		// Reload saved gestures
+		this.gestureManager.reloadGestures();
 
-    // Add commands
-    this.addCommand({
-      id: 'gesture-commander-create-gesture',
-      name: 'Create New Gesture',
-      callback: () => this.openGestureCreationModal()
-    });
+		// Initialize gesture capture
+		this.initializeGestureCapture();
 
-    this.addCommand({
-      id: 'gesture-commander-toggle',
-      name: 'Toggle Gesture Recognition',
-      callback: () => this.toggleGestureRecognition()
-    });
+		// Add commands
+		this.addCommand({
+			id: "gesture-commander-create-gesture",
+			name: "Create New Gesture",
+			callback: () => this.openGestureCreationModal(),
+		});
 
-    // Add settings tab
-    this.settingsTab = new GestureCommanderSettingTab(this.app, this);
-    this.addSettingTab(this.settingsTab);
-  }
+		this.addCommand({
+			id: "gesture-commander-toggle",
+			name: "Toggle Gesture Recognition",
+			callback: () => this.toggleGestureRecognition(),
+		});
 
-  onunload(): void {
-    console.log("Unloading Gesture Commander plugin");
-    if (this.gestureCapture) {
-      this.gestureCapture.disable();
-    }
-  }
+		// Add settings tab
+		this.settingsTab = new GestureCommanderSettingTab(this.app, this);
+		this.addSettingTab(this.settingsTab);
+	}
 
-  private initializeGestureCapture(): void {
-    const captureSettings = {
-      modifierKeys: this.settings.modifierKeys,
-      minStrokeLength: this.settings.minStrokeLength,
-      maxStrokeTime: this.settings.maxStrokeTime,
-      enableVisualFeedback: this.settings.enableVisualFeedback
-    };
+	onunload(): void {
+		if (this.gestureCapture) {
+			this.gestureCapture.disable();
+		}
+	}
 
-    this.gestureCapture = new GestureCapture(
-      captureSettings,
-      (stroke: GestureStroke) => this.handleGestureComplete(stroke)
-    );
+	private initializeGestureCapture(): void {
+		const captureSettings = {
+			modifierKeys: this.settings.modifierKeys,
+			minStrokeLength: this.settings.minStrokeLength,
+			maxStrokeTime: this.settings.maxStrokeTime,
+			enableVisualFeedback: this.settings.enableVisualFeedback,
+		};
 
-    this.gestureCapture.enable();
-  }
+		this.gestureCapture = new GestureCapture(
+			captureSettings,
+			(stroke: GestureStroke) =>
+				this.gestureManager.handleGestureComplete(stroke),
+		);
 
-  private handleGestureComplete(stroke: GestureStroke): void {
-    const result = this.gestureRecognizer.recognize(stroke.points, this.settings.useProtractor);
+		this.gestureCapture.enable();
+	}
 
-    if (result.score >= this.settings.recognitionThreshold) {
-      // Find mapping by gesture name (which is the command ID)
-      const mapping = this.settings.gestureMappings.find(
-        m => m.enabled && m.gestureName === result.name && result.score >= m.minScore
-      );
+	/**
+	 * Executes an Obsidian command by ID using the internal commands API
+	 */
+	private executeCommand(commandId: string): void {
+		const command = (this.app as any).commands.commands[commandId];
+		if (command) {
+			(this.app as any).commands.executeCommandById(commandId);
+		} else {
+			new Notice(`Command "${commandId}" not found`);
+		}
+	}
 
-      if (mapping) {
-        this.executeCommand(mapping.commandId);
-        new Notice(`Command executed: ${mapping.commandName} (${(result.score * 100).toFixed(1)}%)`);
-      } else {
-        new Notice(`Gesture recognized as "${result.name}" but no command mapped (${(result.score * 100).toFixed(1)}%)`);
-      }
-    } else {
-      new Notice(`Gesture not recognized (best match: ${(result.score * 100).toFixed(1)}%)`);
-    }
-  }
+	openGestureCreationModal(existingMapping?: GestureMapping): void {
+		new GestureCreationModal(this.app, this, existingMapping).open();
+	}
 
-  private executeCommand(commandId: string): void {
-    const command = (this.app as any).commands.commands[commandId];
-    if (command) {
-      (this.app as any).commands.executeCommandById(commandId);
-    } else {
-      new Notice(`Command "${commandId}" not found`);
-    }
-  }
+	openGestureEditModal(mapping: GestureMapping): void {
+		this.openGestureCreationModal(mapping);
+	}
 
-  openGestureCreationModal(existingMapping?: GestureMapping): void {
-    new GestureCreationModal(this.app, this, existingMapping).open();
-  }
+	/**
+	 * Placeholder for future enable/disable gesture recognition functionality
+	 */
+	private toggleGestureRecognition(): void {
+		if (this.gestureCapture) {
+			new Notice(
+				"Gesture recognition is active. Configure in settings to modify behavior.",
+			);
+		}
+	}
 
-  openGestureEditModal(mapping: GestureMapping): void {
-    this.openGestureCreationModal(mapping);
-  }
+	updateGestureCapture(): void {
+		if (this.gestureCapture) {
+			this.gestureCapture.updateSettings({
+				modifierKeys: this.settings.modifierKeys,
+				minStrokeLength: this.settings.minStrokeLength,
+				maxStrokeTime: this.settings.maxStrokeTime,
+				enableVisualFeedback: this.settings.enableVisualFeedback,
+			});
+		}
+	}
 
-  private toggleGestureRecognition(): void {
-    if (this.gestureCapture) {
-      // For now, just show a notice. Could implement enable/disable functionality
-      new Notice("Gesture recognition is active. Configure in settings to modify behavior.");
-    }
-  }
+	refreshSettingsTab(): void {
+		if (this.settingsTab) {
+			this.settingsTab.refreshGestureMappings();
+		}
+	}
 
-  updateGestureCapture(): void {
-    if (this.gestureCapture) {
-      this.gestureCapture.updateSettings({
-        modifierKeys: this.settings.modifierKeys,
-        minStrokeLength: this.settings.minStrokeLength,
-        maxStrokeTime: this.settings.maxStrokeTime,
-        enableVisualFeedback: this.settings.enableVisualFeedback
-      });
-    }
-  }
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData(),
+		);
 
-  refreshSettingsTab(): void {
-    if (this.settingsTab) {
-      this.settingsTab.refreshGestureMappings();
-    }
-  }
+		// Update gesture manager with new settings if it exists
+		if (this.gestureManager) {
+			this.gestureManager.updateSettings(this.settings);
+			this.gestureManager.reloadGestures();
+		}
+	}
 
-  async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-
-    // Reload gestures into recognizer after settings are loaded
-    if (this.gestureRecognizer && this.settings.gestureMappings.length > 0) {
-      this.reloadGestures();
-    }
-  }
-
-  private reloadGestures(): void {
-    // Clear existing templates (including any default ones)
-    this.gestureRecognizer.deleteUserGestures();
-
-    // Remove any default gestures that might interfere
-    this.gestureRecognizer.removeTemplatesByName('circle');
-    this.gestureRecognizer.removeTemplatesByName('triangle');
-
-    // Reload all gestures from settings
-    this.settings.gestureMappings.forEach(mapping => {
-      if (mapping.originalPoints && mapping.originalPoints.length > 0) {
-        this.gestureRecognizer.addGesture(mapping.gestureName, mapping.originalPoints);
-      }
-    });
-  }
-
-  async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
-  }
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
+	}
 }

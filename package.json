@@ -39,7 +39,7 @@
     "esbuild": "latest",
     "fs-extra": "^11.2.0",
     "obsidian": "*",
-    "obsidian-typings": "^3.9.5",
+    "obsidian-typings": "latest",
     "semver": "^7.7.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.2",
