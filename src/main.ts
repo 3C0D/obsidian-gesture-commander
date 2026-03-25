@@ -5,11 +5,7 @@ import { GestureCommanderSettingTab } from "./settings.ts";
 import { DEFAULT_SETTINGS } from "./constants.ts";
 import { GestureCreationModal } from "./gesture-creation-modal.ts";
 import { GestureManager } from "./gesture-manager.ts";
-import type {
-	GestureCommanderSettings,
-	GestureMapping,
-	GestureStroke,
-} from "./types.ts";
+import type { GestureCommanderSettings, GestureMapping, GestureStroke } from "./types.ts";
 
 export default class GestureCommanderPlugin extends Plugin {
 	settings: GestureCommanderSettings;
@@ -25,10 +21,8 @@ export default class GestureCommanderPlugin extends Plugin {
 		this.gestureRecognizer = new DollarRecognizer();
 
 		// Initialize gesture manager
-		this.gestureManager = new GestureManager(
-			this.gestureRecognizer,
-			this.settings,
-			(commandId: string) => this.executeCommand(commandId),
+		this.gestureManager = new GestureManager(this.gestureRecognizer, this.settings, (commandId: string) =>
+			this.executeCommand(commandId)
 		);
 
 		// Reload saved gestures
@@ -41,13 +35,13 @@ export default class GestureCommanderPlugin extends Plugin {
 		this.addCommand({
 			id: "gesture-commander-create-gesture",
 			name: "Create New Gesture",
-			callback: () => this.openGestureCreationModal(),
+			callback: () => this.openGestureCreationModal()
 		});
 
 		this.addCommand({
 			id: "gesture-commander-toggle",
 			name: "Toggle Gesture Recognition",
-			callback: () => this.toggleGestureRecognition(),
+			callback: () => this.toggleGestureRecognition()
 		});
 
 		// Add settings tab
@@ -66,13 +60,11 @@ export default class GestureCommanderPlugin extends Plugin {
 			modifierKeys: this.settings.modifierKeys,
 			minStrokeLength: this.settings.minStrokeLength,
 			maxStrokeTime: this.settings.maxStrokeTime,
-			enableVisualFeedback: this.settings.enableVisualFeedback,
+			enableVisualFeedback: this.settings.enableVisualFeedback
 		};
 
-		this.gestureCapture = new GestureCapture(
-			captureSettings,
-			(stroke: GestureStroke) =>
-				this.gestureManager.handleGestureComplete(stroke),
+		this.gestureCapture = new GestureCapture(captureSettings, (stroke: GestureStroke) =>
+			this.gestureManager.handleGestureComplete(stroke)
 		);
 
 		this.gestureCapture.enable();
@@ -103,9 +95,7 @@ export default class GestureCommanderPlugin extends Plugin {
 	 */
 	private toggleGestureRecognition(): void {
 		if (this.gestureCapture) {
-			new Notice(
-				"Gesture recognition is active. Configure in settings to modify behavior.",
-			);
+			new Notice("Gesture recognition is active. Configure in settings to modify behavior.");
 		}
 	}
 
@@ -115,7 +105,7 @@ export default class GestureCommanderPlugin extends Plugin {
 				modifierKeys: this.settings.modifierKeys,
 				minStrokeLength: this.settings.minStrokeLength,
 				maxStrokeTime: this.settings.maxStrokeTime,
-				enableVisualFeedback: this.settings.enableVisualFeedback,
+				enableVisualFeedback: this.settings.enableVisualFeedback
 			});
 		}
 	}
@@ -127,11 +117,7 @@ export default class GestureCommanderPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
 		// Update gesture manager with new settings if it exists
 		if (this.gestureManager) {

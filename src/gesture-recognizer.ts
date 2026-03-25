@@ -8,21 +8,8 @@
  * Software and Technology (UIST '07). Newport, Rhode Island (October 7-10, 2007). New York: ACM Press, pp. 159-168.
  */
 
-import type {
-	Point,
-	Rectangle,
-	GestureTemplate,
-	RecognitionResult,
-} from "./types.ts";
-import {
-	NUM_POINTS,
-	SQUARE_SIZE,
-	ORIGIN,
-	HALF_DIAGONAL,
-	ANGLE_RANGE,
-	ANGLE_PRECISION,
-	PHI,
-} from "./constants.ts";
+import type { Point, Rectangle, GestureTemplate, RecognitionResult } from "./types.ts";
+import { NUM_POINTS, SQUARE_SIZE, ORIGIN, HALF_DIAGONAL, ANGLE_RANGE, ANGLE_PRECISION, PHI } from "./constants.ts";
 
 export type { Point, Rectangle, GestureTemplate, RecognitionResult };
 
@@ -43,7 +30,7 @@ export class DollarRecognizer {
 			return {
 				name: "No match",
 				score: 0.0,
-				time: Date.now() - startTime,
+				time: Date.now() - startTime
 			};
 		}
 
@@ -55,17 +42,14 @@ export class DollarRecognizer {
 			let distance: number;
 
 			if (useProtractor && candidate.vector && this.templates[i].vector) {
-				distance = this.optimalCosineDistance(
-					this.templates[i].vector!,
-					candidate.vector!,
-				);
+				distance = this.optimalCosineDistance(this.templates[i].vector!, candidate.vector!);
 			} else {
 				distance = this.distanceAtBestAngle(
 					candidate.points,
 					this.templates[i],
 					-ANGLE_RANGE,
 					ANGLE_RANGE,
-					ANGLE_PRECISION,
+					ANGLE_PRECISION
 				);
 			}
 
@@ -81,13 +65,11 @@ export class DollarRecognizer {
 			return { name: "No match", score: 0.0, time: endTime - startTime };
 		}
 
-		const score = useProtractor
-			? 1.0 - bestDistance
-			: 1.0 - bestDistance / HALF_DIAGONAL;
+		const score = useProtractor ? 1.0 - bestDistance : 1.0 - bestDistance / HALF_DIAGONAL;
 		return {
 			name: this.templates[bestMatch].name,
 			score: Math.max(0, score),
-			time: endTime - startTime,
+			time: endTime - startTime
 		};
 	}
 
@@ -146,11 +128,7 @@ export class DollarRecognizer {
 		this.loadDefaultTemplates();
 
 		templates.forEach((template) => {
-			if (
-				template.name &&
-				template.points &&
-				Array.isArray(template.points)
-			) {
+			if (template.name && template.points && Array.isArray(template.points)) {
 				this.addGesture(template.name, template.points);
 			}
 		});
@@ -184,7 +162,7 @@ export class DollarRecognizer {
 		return {
 			name,
 			points: processedPoints,
-			vector,
+			vector
 		};
 	}
 
@@ -207,14 +185,8 @@ export class DollarRecognizer {
 		for (let i = 1; i < points.length; i++) {
 			const d = this.distance(points[i - 1], points[i]);
 			if (distance + d >= interval) {
-				const qx =
-					points[i - 1].x +
-					((interval - distance) / d) *
-						(points[i].x - points[i - 1].x);
-				const qy =
-					points[i - 1].y +
-					((interval - distance) / d) *
-						(points[i].y - points[i - 1].y);
+				const qx = points[i - 1].x + ((interval - distance) / d) * (points[i].x - points[i - 1].x);
+				const qy = points[i - 1].y + ((interval - distance) / d) * (points[i].y - points[i - 1].y);
 				const q: Point = { x: qx, y: qy };
 				newPoints.push(q);
 				points.splice(i, 0, q);
@@ -227,7 +199,7 @@ export class DollarRecognizer {
 		if (newPoints.length === n - 1) {
 			newPoints.push({
 				x: points[points.length - 1].x,
-				y: points[points.length - 1].y,
+				y: points[points.length - 1].y
 			});
 		}
 
@@ -336,7 +308,7 @@ export class DollarRecognizer {
 		template: GestureTemplate,
 		a: number,
 		b: number,
-		threshold: number,
+		threshold: number
 	): number {
 		let x1 = PHI * a + (1.0 - PHI) * b;
 		let f1 = this.distanceAtAngle(points, template, x1);
@@ -365,11 +337,7 @@ export class DollarRecognizer {
 	/**
 	 * Calculates the distance between points and template at a specific rotation angle
 	 */
-	private distanceAtAngle(
-		points: Point[],
-		template: GestureTemplate,
-		radians: number,
-	): number {
+	private distanceAtAngle(points: Point[], template: GestureTemplate, radians: number): number {
 		const newPoints = this.rotateBy(points, radians);
 		return this.pathDistance(newPoints, template.points);
 	}

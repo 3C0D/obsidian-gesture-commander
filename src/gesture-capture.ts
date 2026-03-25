@@ -1,9 +1,4 @@
-import type {
-	Point,
-	ModifierKeys,
-	GestureCaptureSettings,
-	GestureStroke,
-} from "./types.ts";
+import type { Point, ModifierKeys, GestureCaptureSettings, GestureStroke } from "./types.ts";
 
 export type { ModifierKeys, GestureCaptureSettings, GestureStroke };
 
@@ -18,10 +13,7 @@ export class GestureCapture {
 	private modifierPressed = false;
 	private hasMovedWhilePressed = false;
 
-	constructor(
-		settings: GestureCaptureSettings,
-		onGestureComplete: (stroke: GestureStroke) => void,
-	) {
+	constructor(settings: GestureCaptureSettings, onGestureComplete: (stroke: GestureStroke) => void) {
 		this.settings = settings;
 		this.onGestureComplete = onGestureComplete;
 	}
@@ -94,7 +86,7 @@ export class GestureCapture {
 
 		const point: Point = {
 			x: event.clientX,
-			y: event.clientY,
+			y: event.clientY
 		};
 
 		// Start capturing on first movement with modifier pressed
@@ -190,14 +182,14 @@ export class GestureCapture {
 			alt: this.settings.modifierKeys.alt,
 			shift: this.settings.modifierKeys.shift,
 			ctrl: this.settings.modifierKeys.ctrl,
-			meta: this.settings.modifierKeys.meta,
+			meta: this.settings.modifierKeys.meta
 		};
 
 		const stroke: GestureStroke = {
 			points: [...this.currentStroke],
 			startTime: this.startTime,
 			endTime: endTime,
-			modifiers: modifiers,
+			modifiers: modifiers
 		};
 
 		this.stopCapture();
@@ -246,16 +238,14 @@ export class GestureCapture {
 	private shouldIgnoreTarget(target: HTMLElement): boolean {
 		// Allow capture in main editor areas - be more permissive
 		const editorElement = target.closest(
-			".workspace-leaf-content, .cm-editor, .markdown-source-view, .markdown-preview-view, .view-content",
+			".workspace-leaf-content, .cm-editor, .markdown-source-view, .markdown-preview-view, .view-content"
 		);
 		if (editorElement) {
 			return false;
 		}
 
 		// Allow capture in main workspace
-		const workspaceElement = target.closest(
-			".workspace-split, .workspace-tabs",
-		);
+		const workspaceElement = target.closest(".workspace-split, .workspace-tabs");
 		if (workspaceElement) {
 			return false;
 		}
@@ -269,18 +259,13 @@ export class GestureCapture {
 		}
 
 		// Ignore settings and modal areas
-		const uiElement = target.closest(
-			".modal, .setting-tab-content, .menu, .suggestion-container",
-		);
+		const uiElement = target.closest(".modal, .setting-tab-content, .menu, .suggestion-container");
 		if (uiElement) {
 			return true;
 		}
 
 		// Ignore elements with specific classes or data attributes
-		if (
-			target.classList.contains("gesture-ignore") ||
-			target.hasAttribute("data-gesture-ignore")
-		) {
+		if (target.classList.contains("gesture-ignore") || target.hasAttribute("data-gesture-ignore")) {
 			return true;
 		}
 
@@ -293,10 +278,7 @@ export class GestureCapture {
 	 */
 	private createVisualFeedback(_startPoint: Point): void {
 		// Create SVG for better line drawing
-		this.visualElement = document.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
+		this.visualElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		this.visualElement.style.position = "fixed";
 		this.visualElement.style.pointerEvents = "none";
 		this.visualElement.style.zIndex = "10000";
@@ -307,15 +289,10 @@ export class GestureCapture {
 		this.visualElement.style.opacity = "0.8";
 
 		// Create path element
-		const path = document.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"path",
-		);
+		const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 		path.setAttribute(
 			"stroke",
-			getComputedStyle(document.body).getPropertyValue(
-				"--interactive-accent",
-			) || "#007acc",
+			getComputedStyle(document.body).getPropertyValue("--interactive-accent") || "#007acc"
 		);
 		path.setAttribute("stroke-width", "3");
 		path.setAttribute("stroke-linecap", "round");

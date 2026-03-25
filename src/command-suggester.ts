@@ -18,13 +18,11 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 		const commandsMap = (this.app as any).commands.commands;
 		this.commands = Object.values(commandsMap).map((cmd: any) => ({
 			id: cmd.id,
-			name: cmd.name || cmd.id,
+			name: cmd.name || cmd.id
 		}));
 
 		// Sort commands by name for better UX
-		this.commands.sort((a, b) =>
-			(a.name || a.id).localeCompare(b.name || b.id),
-		);
+		this.commands.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
 	}
 
 	/**
@@ -62,10 +60,7 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 			}
 
 			// Fuzzy matching
-			if (
-				this.fuzzyMatch(name, lowerQuery) ||
-				this.fuzzyMatch(id, lowerQuery)
-			) {
+			if (this.fuzzyMatch(name, lowerQuery) || this.fuzzyMatch(id, lowerQuery)) {
 				result.push(command);
 			}
 		}
@@ -116,9 +111,6 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 
 		// Fallback: try to find by display name
 		const displayName = this.textInputEl.value;
-		return (
-			this.commands.find((cmd) => (cmd.name || cmd.id) === displayName) ||
-			null
-		);
+		return this.commands.find((cmd) => (cmd.name || cmd.id) === displayName) || null;
 	}
 }
