@@ -13,6 +13,15 @@ import { NUM_POINTS, SQUARE_SIZE, ORIGIN, HALF_DIAGONAL, ANGLE_RANGE, ANGLE_PREC
 
 export type { Point, Rectangle, GestureTemplate, RecognitionResult };
 
+/**
+ * Implementation of the $1 Unistroke Recognizer algorithm.
+ *
+ * Recognizes single-stroke gestures by normalizing them (resample, rotate, scale, translate)
+ * and comparing them against stored templates using path distance or the faster Protractor variant.
+ *
+ * Each gesture is stored as a normalized template. Recognition returns the closest match
+ * and a confidence score between 0 and 1.
+ */
 export class DollarRecognizer {
 	private templates: GestureTemplate[] = [];
 
@@ -26,14 +35,16 @@ export class DollarRecognizer {
 	recognize(points: Point[], useProtractor = false): RecognitionResult {
 		const startTime = Date.now();
 
+		// Need at least 2 points to form a path
 		if (points.length < 2) {
 			return {
 				name: "No match",
 				score: 0.0,
-				time: Date.now() - startTime
+				time: Date.now() - startTime,
 			};
 		}
 
+		// Normalize the input the same way templates were normalized
 		const candidate = this.createTemplate("", points);
 		let bestMatch = -1;
 		let bestDistance = Infinity;
@@ -42,15 +53,11 @@ export class DollarRecognizer {
 			let distance: number;
 
 			if (useProtractor && candidate.vector && this.templates[i].vector) {
+				// Protractor: faster cosine-based comparison
 				distance = this.optimalCosineDistance(this.templates[i].vector!, candidate.vector!);
 			} else {
-				distance = this.distanceAtBestAngle(
-					candidate.points,
-					this.templates[i],
-					-ANGLE_RANGE,
-					ANGLE_RANGE,
-					ANGLE_PRECISION
-				);
+				// Default $1: try all angles within ±45° to find best match
+				distance = this.distanceAtBestAngle(candidate.points, this.templates[i], -ANGLE_RANGE, ANGLE_RANGE, ANGLE_PRECISION);
 			}
 
 			if (distance < bestDistance) {
@@ -65,11 +72,12 @@ export class DollarRecognizer {
 			return { name: "No match", score: 0.0, time: endTime - startTime };
 		}
 
+		// Convert distance to a 0-1 score — 0 = no match, 1 = perfect match
 		const score = useProtractor ? 1.0 - bestDistance : 1.0 - bestDistance / HALF_DIAGONAL;
 		return {
 			name: this.templates[bestMatch].name,
-			score: Math.max(0, score),
-			time: endTime - startTime
+			score: Math.max(0, score), // clamp to 0 in case of floating point drift
+			time: endTime - startTime,
 		};
 	}
 
@@ -79,8 +87,6 @@ export class DollarRecognizer {
 	addGesture(name: string, points: Point[]): number {
 		const template = this.createTemplate(name, points);
 		this.templates.push(template);
-
-		// Count how many templates with this name exist
 		return this.templates.filter((t) => t.name === name).length;
 	}
 
@@ -117,6 +123,7 @@ export class DollarRecognizer {
 	 * Export all templates
 	 */
 	exportTemplates(): GestureTemplate[] {
+		// Deep clone to avoid external mutation of internal state
 		return JSON.parse(JSON.stringify(this.templates));
 	}
 
@@ -128,6 +135,7 @@ export class DollarRecognizer {
 		this.loadDefaultTemplates();
 
 		templates.forEach((template) => {
+			// Skip malformed entries
 			if (template.name && template.points && Array.isArray(template.points)) {
 				this.addGesture(template.name, template.points);
 			}
@@ -143,52 +151,42 @@ export class DollarRecognizer {
 	 * 5. Creates vector representation for Protractor
 	 */
 	private createTemplate(name: string, points: Point[]): GestureTemplate {
-		// Resample to fixed number of points
 		let processedPoints = this.resample(points, NUM_POINTS);
-
-		// Rotate based on indicative angle
 		const radians = this.indicativeAngle(processedPoints);
 		processedPoints = this.rotateBy(processedPoints, -radians);
-
-		// Scale to square
 		processedPoints = this.scaleTo(processedPoints, SQUARE_SIZE);
-
-		// Translate to origin
 		processedPoints = this.translateTo(processedPoints, ORIGIN);
-
-		// Create vector for Protractor
 		const vector = this.vectorize(processedPoints);
 
-		return {
-			name,
-			points: processedPoints,
-			vector
-		};
+		return { name, points: processedPoints, vector };
 	}
 
 	/**
 	 * Loads default gesture templates (currently empty to avoid interference)
 	 */
 	private loadDefaultTemplates(): void {
-		// No default templates - only user-defined gestures
-		// This prevents interference with user's custom gestures
+		// Intentionally empty — all gestures are user-defined
+		// The original $1 library ships with built-in shapes (circle, triangle...)
+		// which would interfere with user recognition
 	}
 
 	/**
 	 * Resamples a path to have exactly n evenly-spaced points
 	 */
 	private resample(points: Point[], n: number): Point[] {
-		const interval = this.pathLength(points) / (n - 1);
+		const interval = this.pathLength(points) / (n - 1); // target spacing between points
 		let distance = 0.0;
 		const newPoints: Point[] = [points[0]];
 
 		for (let i = 1; i < points.length; i++) {
 			const d = this.distance(points[i - 1], points[i]);
 			if (distance + d >= interval) {
+				// Interpolate a new point exactly at the interval boundary
 				const qx = points[i - 1].x + ((interval - distance) / d) * (points[i].x - points[i - 1].x);
 				const qy = points[i - 1].y + ((interval - distance) / d) * (points[i].y - points[i - 1].y);
 				const q: Point = { x: qx, y: qy };
 				newPoints.push(q);
+				// Insert q back into points so it becomes the new starting point
 				points.splice(i, 0, q);
 				distance = 0.0;
 			} else {
@@ -196,10 +194,11 @@ export class DollarRecognizer {
 			}
 		}
 
+		// Floating point rounding can leave us one point short — pad with last point
 		if (newPoints.length === n - 1) {
 			newPoints.push({
 				x: points[points.length - 1].x,
-				y: points[points.length - 1].y
+				y: points[points.length - 1].y,
 			});
 		}
 
@@ -224,6 +223,7 @@ export class DollarRecognizer {
 		const newPoints: Point[] = [];
 
 		for (const point of points) {
+			// Standard 2D rotation matrix around centroid
 			const qx = (point.x - c.x) * cos - (point.y - c.y) * sin + c.x;
 			const qy = (point.x - c.x) * sin + (point.y - c.y) * cos + c.y;
 			newPoints.push({ x: qx, y: qy });
@@ -240,6 +240,7 @@ export class DollarRecognizer {
 		const newPoints: Point[] = [];
 
 		for (const point of points) {
+			// Scale each axis independently to fill the square
 			const qx = point.x * (size / boundingBox.width);
 			const qy = point.y * (size / boundingBox.height);
 			newPoints.push({ x: qx, y: qy });
@@ -276,6 +277,7 @@ export class DollarRecognizer {
 			sum += point.x * point.x + point.y * point.y;
 		}
 
+		// Normalize to unit vector so comparison is angle-based, not magnitude-based
 		const magnitude = Math.sqrt(sum);
 		for (let i = 0; i < vector.length; i++) {
 			vector[i] /= magnitude;
@@ -296,6 +298,7 @@ export class DollarRecognizer {
 			b += v1[i] * v2[i + 1] - v1[i + 1] * v2[i];
 		}
 
+		// Find the optimal rotation angle then compute the cosine distance
 		const angle = Math.atan(b / a);
 		return Math.acos(a * Math.cos(angle) + b * Math.sin(angle));
 	}
@@ -303,13 +306,8 @@ export class DollarRecognizer {
 	/**
 	 * Uses golden section search to find the angle that minimizes distance between gestures
 	 */
-	private distanceAtBestAngle(
-		points: Point[],
-		template: GestureTemplate,
-		a: number,
-		b: number,
-		threshold: number
-	): number {
+	private distanceAtBestAngle(points: Point[], template: GestureTemplate, a: number, b: number, threshold: number): number {
+		// Golden section search — narrows the angle range until precision threshold is reached
 		let x1 = PHI * a + (1.0 - PHI) * b;
 		let f1 = this.distanceAtAngle(points, template, x1);
 		let x2 = (1.0 - PHI) * a + PHI * b;
