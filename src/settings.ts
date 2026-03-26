@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import GestureCommanderPlugin from "./main.ts";
 import { DEFAULT_SETTINGS } from "./constants.ts";
 import type { Point, GestureMapping } from "./types.ts";
+import { confirmation } from "./confirm-modal.ts";
 
 export class GestureCommanderSettingTab extends PluginSettingTab {
 	plugin: GestureCommanderPlugin;
@@ -227,13 +228,16 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						.setButtonText("Delete")
 						.setWarning()
 						.onClick(async () => {
-							// Remove from recognizer
-							this.plugin.gestureRecognizer.removeTemplatesByName(mapping.gestureName);
-							// Remove from settings
-							this.plugin.settings.gestureMappings.splice(index, 1);
-							await this.plugin.saveSettings();
-							this.refreshGestureMappingsInternal(container);
-							new Notice("Gesture mapping deleted");
+							const confirmed = await confirmation(this.app, "Are you sure you want to delete this gesture mapping?");
+							if (confirmed) {
+								// Remove from recognizer
+								this.plugin.gestureRecognizer.removeTemplatesByName(mapping.gestureName);
+								// Remove from settings
+								this.plugin.settings.gestureMappings.splice(index, 1);
+								await this.plugin.saveSettings();
+								this.refreshGestureMappingsInternal(container);
+								new Notice("Gesture mapping deleted");
+							}
 						})
 				);
 		});
@@ -335,7 +339,8 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 					.setButtonText("Reset")
 					.setWarning()
 					.onClick(async () => {
-						if (confirm("Are you sure you want to reset all settings? This cannot be undone.")) {
+						const confirmed = await confirmation(this.app, "Are you sure you want to reset all settings? This cannot be undone.");
+						if (confirmed) {
 							this.plugin.settings = { ...DEFAULT_SETTINGS };
 							await this.plugin.saveSettings();
 							this.plugin.updateGestureCapture();
