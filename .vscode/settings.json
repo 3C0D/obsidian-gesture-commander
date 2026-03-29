@@ -1,4 +1,6 @@
 {
+	"npm.packageManager": "yarn",
+	// "js/ts.preferences.includePackageJsonAutoImports": "off",
 	"[typescript]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},

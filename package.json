@@ -39,7 +39,7 @@
     "esbuild": "latest",
     "fs-extra": "^11.2.0",
     "obsidian": "*",
-    "obsidian-typings": "latest",
+    "obsidian-typings": "^3.9.5",
     "semver": "^7.7.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.2",
@@ -48,7 +48,8 @@
     "@typescript-eslint/parser": "latest",
     "eslint": "latest",
     "eslint-import-resolver-typescript": "latest",
-    "jiti": "latest"
+    "jiti": "latest",
+    "prettier": "^3.4.0"
   },
   "dependencies": {
     "@types/lodash": "^4.17.17",

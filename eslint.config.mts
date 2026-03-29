@@ -29,7 +29,7 @@ const configs: Linter.Config[] = [
     },
     rules: {
       // Base rules
-      "no-unused-vars": "off", // disabled in favor of @typescript-eslint/no-unused-vars
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["error", { "args": "none", "varsIgnorePattern": "^_" }],
       "@typescript-eslint/ban-ts-comment": "warn",
       "no-prototype-builtins": "off",
