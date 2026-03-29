@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal, Setting } from 'obsidian';
 
 type ConfirmCallback = (confirmed: boolean) => void;
 
@@ -11,7 +11,7 @@ class ConfirmModal extends Modal {
 	constructor(
 		app: App,
 		public message: string,
-		public callback: ConfirmCallback,
+		public callback: ConfirmCallback
 	) {
 		super(app);
 	}
@@ -20,16 +20,16 @@ class ConfirmModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("p").setText(this.message);
+		contentEl.createEl('p').setText(this.message);
 
 		new Setting(this.contentEl)
 			.addButton((b) => {
-				b.setIcon("checkmark")
+				b.setIcon('checkmark')
 					.setCta()
 					.onClick((): void => this.confirm(true));
 			})
 			.addExtraButton((b) =>
-				b.setIcon("cross").onClick((): void => this.confirm(false)),
+				b.setIcon('cross').onClick((): void => this.confirm(false))
 			);
 	}
 

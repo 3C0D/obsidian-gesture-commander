@@ -1,4 +1,4 @@
-import { deg2Rad } from "./utils.ts";
+import { deg2Rad } from './utils.ts';
 
 // $1 Recognizer
 

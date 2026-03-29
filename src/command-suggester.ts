@@ -1,5 +1,5 @@
-import { AbstractInputSuggest, App } from "obsidian";
-import type { Command } from "./types.ts";
+import { AbstractInputSuggest, App } from 'obsidian';
+import type { Command } from './types.ts';
 
 export type { Command };
 
@@ -29,7 +29,7 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 	 * Filters commands using exact match, starts-with, contains, and fuzzy matching
 	 */
 	protected getSuggestions(query: string): Command[] {
-		if (!query || query.trim() === "") {
+		if (!query || query.trim() === '') {
 			// Return all commands when no query (when user clicks in empty field)
 			return this.commands.slice(0, 100); // Show more commands
 		}
@@ -82,21 +82,21 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 	}
 
 	renderSuggestion(command: Command, el: HTMLElement): void {
-		const container = el.createDiv("command-suggestion");
+		const container = el.createDiv('command-suggestion');
 
-		const nameEl = container.createDiv("command-suggestion-name");
+		const nameEl = container.createDiv('command-suggestion-name');
 		nameEl.textContent = command.name || command.id;
 
 		if (command.name && command.name !== command.id) {
-			const idEl = container.createDiv("command-suggestion-id");
+			const idEl = container.createDiv('command-suggestion-id');
 			idEl.textContent = command.id;
 		}
 	}
 
 	selectSuggestion(command: Command): void {
 		this.textInputEl.value = command.name || command.id;
-		this.textInputEl.setAttribute("data-command-id", command.id);
-		this.textInputEl.trigger("input");
+		this.textInputEl.setAttribute('data-command-id', command.id);
+		this.textInputEl.trigger('input');
 		this.close();
 	}
 
@@ -104,7 +104,7 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 	 * Retrieves the selected command from the input field's data attribute or by name
 	 */
 	getSelectedCommand(): Command | null {
-		const commandId = this.textInputEl.getAttribute("data-command-id");
+		const commandId = this.textInputEl.getAttribute('data-command-id');
 		if (commandId) {
 			return this.commands.find((cmd) => cmd.id === commandId) || null;
 		}

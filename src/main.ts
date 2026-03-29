@@ -1,11 +1,11 @@
-import { Plugin, Notice } from "obsidian";
-import { DollarRecognizer } from "./gesture-recognizer.ts";
-import { GestureCapture } from "./gesture-capture.ts";
-import { GestureCommanderSettingTab } from "./settings.ts";
-import { DEFAULT_SETTINGS } from "./constants.ts";
-import { GestureCreationModal } from "./gesture-creation-modal.ts";
-import { GestureManager } from "./gesture-manager.ts";
-import type { GestureCommanderSettings, GestureMapping, GestureStroke } from "./types.ts";
+import { Plugin, Notice } from 'obsidian';
+import { DollarRecognizer } from './gesture-recognizer.ts';
+import { GestureCapture } from './gesture-capture.ts';
+import { GestureCommanderSettingTab } from './settings.ts';
+import { DEFAULT_SETTINGS } from './constants.ts';
+import { GestureCreationModal } from './gesture-creation-modal.ts';
+import { GestureManager } from './gesture-manager.ts';
+import type { GestureCommanderSettings, GestureMapping, GestureStroke } from './types.ts';
 
 export default class GestureCommanderPlugin extends Plugin {
 	settings: GestureCommanderSettings;
@@ -21,8 +21,10 @@ export default class GestureCommanderPlugin extends Plugin {
 		this.gestureRecognizer = new DollarRecognizer();
 
 		// Initialize gesture manager
-		this.gestureManager = new GestureManager(this.gestureRecognizer, this.settings, (commandId: string) =>
-			this.executeCommand(commandId)
+		this.gestureManager = new GestureManager(
+			this.gestureRecognizer,
+			this.settings,
+			(commandId: string) => this.executeCommand(commandId)
 		);
 
 		// Reload saved gestures
@@ -33,14 +35,14 @@ export default class GestureCommanderPlugin extends Plugin {
 
 		// Add commands
 		this.addCommand({
-			id: "gesture-commander-create-gesture",
-			name: "Create New Gesture",
+			id: 'gesture-commander-create-gesture',
+			name: 'Create New Gesture',
 			callback: () => this.openGestureCreationModal()
 		});
 
 		this.addCommand({
-			id: "gesture-commander-toggle",
-			name: "Toggle Gesture Recognition",
+			id: 'gesture-commander-toggle',
+			name: 'Toggle Gesture Recognition',
 			callback: () => this.toggleGestureRecognition()
 		});
 
@@ -63,8 +65,9 @@ export default class GestureCommanderPlugin extends Plugin {
 			enableVisualFeedback: this.settings.enableVisualFeedback
 		};
 
-		this.gestureCapture = new GestureCapture(captureSettings, (stroke: GestureStroke) =>
-			this.gestureManager.handleGestureComplete(stroke)
+		this.gestureCapture = new GestureCapture(
+			captureSettings,
+			(stroke: GestureStroke) => this.gestureManager.handleGestureComplete(stroke)
 		);
 
 		this.gestureCapture.enable();
@@ -95,7 +98,9 @@ export default class GestureCommanderPlugin extends Plugin {
 	 */
 	private toggleGestureRecognition(): void {
 		if (this.gestureCapture) {
-			new Notice("Gesture recognition is active. Configure in settings to modify behavior.");
+			new Notice(
+				'Gesture recognition is active. Configure in settings to modify behavior.'
+			);
 		}
 	}
 

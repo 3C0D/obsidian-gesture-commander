@@ -1,7 +1,7 @@
-import { App, Modal, Setting, Notice } from "obsidian";
-import GestureCommanderPlugin from "./main.ts";
-import type { Point, GestureMapping, Command } from "./types.ts";
-import { CommandSuggest } from "./command-suggester.ts";
+import { App, Modal, Setting, Notice } from 'obsidian';
+import GestureCommanderPlugin from './main.ts';
+import type { Point, GestureMapping, Command } from './types.ts';
+import { CommandSuggest } from './command-suggester.ts';
 
 export class GestureCreationModal extends Modal {
 	plugin: GestureCommanderPlugin;
@@ -9,12 +9,16 @@ export class GestureCreationModal extends Modal {
 	ctx: CanvasRenderingContext2D;
 	isDrawing = false;
 	points: Point[] = [];
-	gestureName = "";
+	gestureName = '';
 	selectedCommand: Command | null = null;
 	existingMapping: GestureMapping | null = null;
 	commandSuggest: CommandSuggest | null = null;
 
-	constructor(app: App, plugin: GestureCommanderPlugin, existingMapping?: GestureMapping) {
+	constructor(
+		app: App,
+		plugin: GestureCommanderPlugin,
+		existingMapping?: GestureMapping
+	) {
 		super(app);
 		this.plugin = plugin;
 		this.existingMapping = existingMapping || null;
@@ -29,8 +33,8 @@ export class GestureCreationModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("h2", {
-			text: this.existingMapping ? "Edit Gesture" : "Create New Gesture"
+		contentEl.createEl('h2', {
+			text: this.existingMapping ? 'Edit Gesture' : 'Create New Gesture'
 		});
 
 		this.createCommandSelector(contentEl);
@@ -64,10 +68,12 @@ export class GestureCreationModal extends Modal {
 
 	private createCommandSelector(containerEl: HTMLElement): void {
 		new Setting(containerEl)
-			.setName("Command")
-			.setDesc("Search and select the command to execute when this gesture is recognized")
+			.setName('Command')
+			.setDesc(
+				'Search and select the command to execute when this gesture is recognized'
+			)
 			.addText((text) => {
-				text.setPlaceholder("Type to search commands...");
+				text.setPlaceholder('Type to search commands...');
 
 				// Set initial value if editing
 				if (this.selectedCommand) {
@@ -78,8 +84,9 @@ export class GestureCreationModal extends Modal {
 				this.commandSuggest = new CommandSuggest(this.app, text.inputEl);
 
 				// Listen for changes to update selected command and auto-generate gesture name
-				text.inputEl.addEventListener("input", () => {
-					this.selectedCommand = this.commandSuggest?.getSelectedCommand() || null;
+				text.inputEl.addEventListener('input', () => {
+					this.selectedCommand =
+						this.commandSuggest?.getSelectedCommand() || null;
 
 					// Auto-generate gesture name when command is selected
 					if (this.selectedCommand) {
@@ -90,79 +97,79 @@ export class GestureCreationModal extends Modal {
 	}
 
 	private createDrawingCanvas(containerEl: HTMLElement): void {
-		const canvasContainer = containerEl.createDiv("gesture-canvas-container");
-		canvasContainer.style.border = "2px solid var(--background-modifier-border)";
-		canvasContainer.style.borderRadius = "8px";
-		canvasContainer.style.padding = "10px";
-		canvasContainer.style.marginTop = "20px";
-		canvasContainer.style.marginBottom = "20px";
+		const canvasContainer = containerEl.createDiv('gesture-canvas-container');
+		canvasContainer.style.border = '2px solid var(--background-modifier-border)';
+		canvasContainer.style.borderRadius = '8px';
+		canvasContainer.style.padding = '10px';
+		canvasContainer.style.marginTop = '20px';
+		canvasContainer.style.marginBottom = '20px';
 
-		canvasContainer.createEl("h4", { text: "Draw your gesture:" });
-		canvasContainer.createEl("p", {
-			text: "Click and drag to draw the gesture. The drawing will be used as a template for recognition.",
-			cls: "setting-item-description"
+		canvasContainer.createEl('h4', { text: 'Draw your gesture:' });
+		canvasContainer.createEl('p', {
+			text: 'Click and drag to draw the gesture. The drawing will be used as a template for recognition.',
+			cls: 'setting-item-description'
 		});
 
-		this.canvas = canvasContainer.createEl("canvas");
+		this.canvas = canvasContainer.createEl('canvas');
 		this.canvas.width = 400;
 		this.canvas.height = 300;
-		this.canvas.style.border = "1px solid var(--background-modifier-border)";
-		this.canvas.style.backgroundColor = "var(--background-primary)";
-		this.canvas.style.cursor = "crosshair";
-		this.canvas.style.display = "block";
-		this.canvas.style.margin = "10px auto";
+		this.canvas.style.border = '1px solid var(--background-modifier-border)';
+		this.canvas.style.backgroundColor = 'var(--background-primary)';
+		this.canvas.style.cursor = 'crosshair';
+		this.canvas.style.display = 'block';
+		this.canvas.style.margin = '10px auto';
 
-		this.ctx = this.canvas.getContext("2d")!;
-		this.ctx.strokeStyle = "var(--text-accent)";
+		this.ctx = this.canvas.getContext('2d')!;
+		this.ctx.strokeStyle = 'var(--text-accent)';
 		this.ctx.lineWidth = 3;
-		this.ctx.lineCap = "round";
-		this.ctx.lineJoin = "round";
+		this.ctx.lineCap = 'round';
+		this.ctx.lineJoin = 'round';
 
 		this.setupCanvasEvents();
 
 		// Clear button
 		new Setting(canvasContainer).addButton((button) =>
-			button.setButtonText("Clear Canvas").onClick(() => {
+			button.setButtonText('Clear Canvas').onClick(() => {
 				this.clearCanvas();
 			})
 		);
 	}
 
 	private createActionButtons(containerEl: HTMLElement): void {
-		const buttonContainer = containerEl.createDiv("gesture-modal-buttons");
-		buttonContainer.style.display = "flex";
-		buttonContainer.style.justifyContent = "flex-end";
-		buttonContainer.style.gap = "10px";
-		buttonContainer.style.marginTop = "20px";
+		const buttonContainer = containerEl.createDiv('gesture-modal-buttons');
+		buttonContainer.style.display = 'flex';
+		buttonContainer.style.justifyContent = 'flex-end';
+		buttonContainer.style.gap = '10px';
+		buttonContainer.style.marginTop = '20px';
 
 		// Cancel button
-		const cancelButton = buttonContainer.createEl("button", {
-			text: "Cancel"
+		const cancelButton = buttonContainer.createEl('button', {
+			text: 'Cancel'
 		});
 		cancelButton.onclick = (): void => this.close();
 
 		// Save button
-		const saveButton = buttonContainer.createEl("button", {
-			text: this.existingMapping ? "Update" : "Create",
-			cls: "mod-cta"
+		const saveButton = buttonContainer.createEl('button', {
+			text: this.existingMapping ? 'Update' : 'Create',
+			cls: 'mod-cta'
 		});
 		saveButton.onclick = (): void => {
 			this.saveGesture().catch((error) => {
-				new Notice("Error saving gesture: " + error.message);
+				new Notice('Error saving gesture: ' + error.message);
 			});
 		};
 	}
 
 	private setupCanvasEvents(): void {
-		this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
-		this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
-		this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this));
-		this.canvas.addEventListener("mouseleave", this.handleMouseUp.bind(this));
+		this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+		this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+		this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+		this.canvas.addEventListener('mouseleave', this.handleMouseUp.bind(this));
 
 		// Touch events for mobile support
-		this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this));
-		this.canvas.addEventListener("touchmove", this.handleTouchMove.bind(this));
-		this.canvas.addEventListener("touchend", this.handleTouchEnd.bind(this));
+		this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
+		this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
+		this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
 	}
 
 	private handleMouseDown(event: MouseEvent): void {
@@ -204,7 +211,7 @@ export class GestureCreationModal extends Modal {
 	private handleTouchStart(event: TouchEvent): void {
 		event.preventDefault();
 		const touch = event.touches[0];
-		const mouseEvent = new MouseEvent("mousedown", {
+		const mouseEvent = new MouseEvent('mousedown', {
 			clientX: touch.clientX,
 			clientY: touch.clientY
 		});
@@ -214,7 +221,7 @@ export class GestureCreationModal extends Modal {
 	private handleTouchMove(event: TouchEvent): void {
 		event.preventDefault();
 		const touch = event.touches[0];
-		const mouseEvent = new MouseEvent("mousemove", {
+		const mouseEvent = new MouseEvent('mousemove', {
 			clientX: touch.clientX,
 			clientY: touch.clientY
 		});
@@ -233,7 +240,7 @@ export class GestureCreationModal extends Modal {
 
 	private async saveGesture(): Promise<void> {
 		if (!this.selectedCommand) {
-			new Notice("Please select a command");
+			new Notice('Please select a command');
 			return;
 		}
 
@@ -241,14 +248,16 @@ export class GestureCreationModal extends Modal {
 		this.gestureName = this.generateGestureName();
 
 		if (this.points.length < 5) {
-			new Notice("Please draw a gesture on the canvas");
+			new Notice('Please draw a gesture on the canvas');
 			return;
 		}
 
 		try {
 			// Remove existing templates with the same name if updating
 			if (this.existingMapping) {
-				this.plugin.gestureRecognizer.removeTemplatesByName(this.existingMapping.gestureName);
+				this.plugin.gestureRecognizer.removeTemplatesByName(
+					this.existingMapping.gestureName
+				);
 			}
 
 			// Add gesture to recognizer with original canvas points
@@ -267,7 +276,9 @@ export class GestureCreationModal extends Modal {
 
 			if (this.existingMapping) {
 				// Update existing mapping
-				const index = this.plugin.settings.gestureMappings.findIndex((m) => m.id === this.existingMapping!.id);
+				const index = this.plugin.settings.gestureMappings.findIndex(
+					(m) => m.id === this.existingMapping!.id
+				);
 				if (index !== -1) {
 					this.plugin.settings.gestureMappings[index] = mapping;
 				}
@@ -281,10 +292,14 @@ export class GestureCreationModal extends Modal {
 			// Refresh settings tab if it's open
 			this.plugin.refreshSettingsTab();
 
-			new Notice(this.existingMapping ? "Gesture updated successfully" : "Gesture created successfully");
+			new Notice(
+				this.existingMapping
+					? 'Gesture updated successfully'
+					: 'Gesture created successfully'
+			);
 			this.close();
 		} catch (error) {
-			new Notice("Error saving gesture: " + error.message);
+			new Notice('Error saving gesture: ' + error.message);
 		}
 	}
 
@@ -292,11 +307,16 @@ export class GestureCreationModal extends Modal {
 		if (!this.existingMapping) return;
 
 		// Use original points if available, otherwise fall back to template points
-		if (this.existingMapping.originalPoints && this.existingMapping.originalPoints.length > 0) {
+		if (
+			this.existingMapping.originalPoints &&
+			this.existingMapping.originalPoints.length > 0
+		) {
 			this.drawTemplateOnCanvas(this.existingMapping.originalPoints);
 		} else {
 			// Fallback to template points
-			const templates = this.plugin.gestureRecognizer.getTemplatesByName(this.existingMapping.gestureName);
+			const templates = this.plugin.gestureRecognizer.getTemplatesByName(
+				this.existingMapping.gestureName
+			);
 			if (templates.length > 0) {
 				const template = templates[0];
 				this.drawTemplateOnCanvas(template.points);
@@ -322,16 +342,24 @@ export class GestureCreationModal extends Modal {
 
 		if (needsScaling) {
 			// Scale points to fit canvas (template points)
-			const scale = Math.min((this.canvas.width - 40) / bounds.width, (this.canvas.height - 40) / bounds.height);
+			const scale = Math.min(
+				(this.canvas.width - 40) / bounds.width,
+				(this.canvas.height - 40) / bounds.height
+			);
 
-			const offsetX = (this.canvas.width - bounds.width * scale) / 2 - bounds.minX * scale;
-			const offsetY = (this.canvas.height - bounds.height * scale) / 2 - bounds.minY * scale;
+			const offsetX =
+				(this.canvas.width - bounds.width * scale) / 2 - bounds.minX * scale;
+			const offsetY =
+				(this.canvas.height - bounds.height * scale) / 2 - bounds.minY * scale;
 
 			this.ctx.beginPath();
 			this.ctx.moveTo(points[0].x * scale + offsetX, points[0].y * scale + offsetY);
 
 			for (let i = 1; i < points.length; i++) {
-				this.ctx.lineTo(points[i].x * scale + offsetX, points[i].y * scale + offsetY);
+				this.ctx.lineTo(
+					points[i].x * scale + offsetX,
+					points[i].y * scale + offsetY
+				);
 			}
 
 			this.ctx.stroke();
@@ -393,6 +421,6 @@ export class GestureCreationModal extends Modal {
 	}
 
 	private generateId(): string {
-		return "gesture-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+		return 'gesture-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 	}
 }

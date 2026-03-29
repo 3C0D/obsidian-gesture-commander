@@ -8,8 +8,16 @@
  * Software and Technology (UIST '07). Newport, Rhode Island (October 7-10, 2007). New York: ACM Press, pp. 159-168.
  */
 
-import type { Point, Rectangle, GestureTemplate, RecognitionResult } from "./types.ts";
-import { NUM_POINTS, SQUARE_SIZE, ORIGIN, HALF_DIAGONAL, ANGLE_RANGE, ANGLE_PRECISION, PHI } from "./constants.ts";
+import type { Point, Rectangle, GestureTemplate, RecognitionResult } from './types.ts';
+import {
+	NUM_POINTS,
+	SQUARE_SIZE,
+	ORIGIN,
+	HALF_DIAGONAL,
+	ANGLE_RANGE,
+	ANGLE_PRECISION,
+	PHI
+} from './constants.ts';
 
 export type { Point, Rectangle, GestureTemplate, RecognitionResult };
 
@@ -38,14 +46,14 @@ export class DollarRecognizer {
 		// Need at least 2 points to form a path
 		if (points.length < 2) {
 			return {
-				name: "No match",
+				name: 'No match',
 				score: 0.0,
-				time: Date.now() - startTime,
+				time: Date.now() - startTime
 			};
 		}
 
 		// Normalize the input the same way templates were normalized
-		const candidate = this.createTemplate("", points);
+		const candidate = this.createTemplate('', points);
 		let bestMatch = -1;
 		let bestDistance = Infinity;
 
@@ -54,10 +62,19 @@ export class DollarRecognizer {
 
 			if (useProtractor && candidate.vector && this.templates[i].vector) {
 				// Protractor: faster cosine-based comparison
-				distance = this.optimalCosineDistance(this.templates[i].vector!, candidate.vector!);
+				distance = this.optimalCosineDistance(
+					this.templates[i].vector!,
+					candidate.vector!
+				);
 			} else {
 				// Default $1: try all angles within ±45° to find best match
-				distance = this.distanceAtBestAngle(candidate.points, this.templates[i], -ANGLE_RANGE, ANGLE_RANGE, ANGLE_PRECISION);
+				distance = this.distanceAtBestAngle(
+					candidate.points,
+					this.templates[i],
+					-ANGLE_RANGE,
+					ANGLE_RANGE,
+					ANGLE_PRECISION
+				);
 			}
 
 			if (distance < bestDistance) {
@@ -69,15 +86,17 @@ export class DollarRecognizer {
 		const endTime = Date.now();
 
 		if (bestMatch === -1) {
-			return { name: "No match", score: 0.0, time: endTime - startTime };
+			return { name: 'No match', score: 0.0, time: endTime - startTime };
 		}
 
 		// Convert distance to a 0-1 score — 0 = no match, 1 = perfect match
-		const score = useProtractor ? 1.0 - bestDistance : 1.0 - bestDistance / HALF_DIAGONAL;
+		const score = useProtractor
+			? 1.0 - bestDistance
+			: 1.0 - bestDistance / HALF_DIAGONAL;
 		return {
 			name: this.templates[bestMatch].name,
 			score: Math.max(0, score), // clamp to 0 in case of floating point drift
-			time: endTime - startTime,
+			time: endTime - startTime
 		};
 	}
 
@@ -182,8 +201,12 @@ export class DollarRecognizer {
 			const d = this.distance(points[i - 1], points[i]);
 			if (distance + d >= interval) {
 				// Interpolate a new point exactly at the interval boundary
-				const qx = points[i - 1].x + ((interval - distance) / d) * (points[i].x - points[i - 1].x);
-				const qy = points[i - 1].y + ((interval - distance) / d) * (points[i].y - points[i - 1].y);
+				const qx =
+					points[i - 1].x +
+					((interval - distance) / d) * (points[i].x - points[i - 1].x);
+				const qy =
+					points[i - 1].y +
+					((interval - distance) / d) * (points[i].y - points[i - 1].y);
 				const q: Point = { x: qx, y: qy };
 				newPoints.push(q);
 				// Insert q back into points so it becomes the new starting point
@@ -198,7 +221,7 @@ export class DollarRecognizer {
 		if (newPoints.length === n - 1) {
 			newPoints.push({
 				x: points[points.length - 1].x,
-				y: points[points.length - 1].y,
+				y: points[points.length - 1].y
 			});
 		}
 
@@ -306,7 +329,13 @@ export class DollarRecognizer {
 	/**
 	 * Uses golden section search to find the angle that minimizes distance between gestures
 	 */
-	private distanceAtBestAngle(points: Point[], template: GestureTemplate, a: number, b: number, threshold: number): number {
+	private distanceAtBestAngle(
+		points: Point[],
+		template: GestureTemplate,
+		a: number,
+		b: number,
+		threshold: number
+	): number {
 		// Golden section search — narrows the angle range until precision threshold is reached
 		let x1 = PHI * a + (1.0 - PHI) * b;
 		let f1 = this.distanceAtAngle(points, template, x1);
@@ -335,7 +364,11 @@ export class DollarRecognizer {
 	/**
 	 * Calculates the distance between points and template at a specific rotation angle
 	 */
-	private distanceAtAngle(points: Point[], template: GestureTemplate, radians: number): number {
+	private distanceAtAngle(
+		points: Point[],
+		template: GestureTemplate,
+		radians: number
+	): number {
 		const newPoints = this.rotateBy(points, radians);
 		return this.pathDistance(newPoints, template.points);
 	}
