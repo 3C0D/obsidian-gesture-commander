@@ -17,6 +17,7 @@ export class GestureCapture {
 	private lastPoint: Point | null = null;
 	private modifierPressed = false;
 	private hasMovedWhilePressed = false;
+	private mouseButtonPressed = false;
 
 	constructor(
 		settings: GestureCaptureSettings,
@@ -33,6 +34,8 @@ export class GestureCapture {
 		document.addEventListener('keydown', this.handleKeyDown);
 		document.addEventListener('keyup', this.handleKeyUp);
 		document.addEventListener('mousemove', this.handleMouseMove);
+		document.addEventListener('mousedown', this.handleMouseDown);
+		document.addEventListener('mouseup', this.handleMouseUp);
 
 		// Prevent context menu during gesture capture
 		document.addEventListener('contextmenu', this.handleContextMenu);
@@ -45,6 +48,8 @@ export class GestureCapture {
 		document.removeEventListener('keydown', this.handleKeyDown);
 		document.removeEventListener('keyup', this.handleKeyUp);
 		document.removeEventListener('mousemove', this.handleMouseMove);
+		document.removeEventListener('mousedown', this.handleMouseDown);
+		document.removeEventListener('mouseup', this.handleMouseUp);
 		document.removeEventListener('contextmenu', this.handleContextMenu);
 
 		this.stopCapture();
@@ -61,6 +66,11 @@ export class GestureCapture {
 	 * Handles keydown events to detect when modifier keys are pressed
 	 */
 	private handleKeyDown = (event: KeyboardEvent): void => {
+		// Ignore if a mouse button is already down (click-and-drag protection)
+		if (this.mouseButtonPressed) {
+			return;
+		}
+
 		// Check if required modifier keys are pressed
 		if (this.areModifierKeysPressed(event)) {
 			if (!this.modifierPressed) {
@@ -81,8 +91,8 @@ export class GestureCapture {
 	 * Handles mouse movement to capture gesture points
 	 */
 	private handleMouseMove = (event: MouseEvent): void => {
-		// Only track movement if modifier keys are pressed
-		if (!this.modifierPressed) {
+		// Ignore movement during click-and-drag or other button interactions
+		if (!this.modifierPressed || this.mouseButtonPressed) {
 			return;
 		}
 
@@ -117,6 +127,27 @@ export class GestureCapture {
 		// Check for maximum stroke time
 		if (Date.now() - this.startTime > this.settings.maxStrokeTime) {
 			this.stopCapture();
+		}
+	};
+
+	/**
+	 * Handles mouse button presses to prevent gesture activation during drag interactions
+	 */
+	private handleMouseDown = (event: MouseEvent): void => {
+		if (event.button === 0) {
+			this.mouseButtonPressed = true;
+			this.modifierPressed = false;
+			this.hasMovedWhilePressed = false;
+			this.stopCapture();
+		}
+	};
+
+	/**
+	 * Handles mouse button releases to restore normal gesture behavior
+	 */
+	private handleMouseUp = (event: MouseEvent): void => {
+		if (event.button === 0) {
+			this.mouseButtonPressed = false;
 		}
 	};
 
@@ -221,21 +252,29 @@ export class GestureCapture {
 	}
 
 	/**
-	 * Checks if the required modifier keys are currently pressed
+	 * Checks if the modifier state exactly matches the configured combination.
+	 * This prevents a broader combination from activating a narrower one.
 	 */
 	private areModifierKeysPressed(event: MouseEvent | KeyboardEvent): boolean {
 		const required = this.settings.modifierKeys;
 
 		// Check for AltGraph key (detected as key === 'AltGraph')
-		// AltGraph should only trigger if both Alt and Ctrl are required
+		// AltGraph should only be treated as active when both Alt and Ctrl are required.
 		const isAltGraph = 'key' in event && event.key === 'AltGraph';
 		const altGraphMatches = isAltGraph && required.alt && required.ctrl;
 
+		const pressedState = {
+			alt: event.altKey || altGraphMatches,
+			shift: event.shiftKey,
+			ctrl: event.ctrlKey || altGraphMatches,
+			meta: event.metaKey
+		};
+
 		return (
-			(!required.alt || event.altKey || altGraphMatches) &&
-			(!required.shift || event.shiftKey) &&
-			(!required.ctrl || event.ctrlKey || altGraphMatches) &&
-			(!required.meta || event.metaKey)
+			required.alt === pressedState.alt &&
+			required.shift === pressedState.shift &&
+			required.ctrl === pressedState.ctrl &&
+			required.meta === pressedState.meta
 		);
 	}
 
