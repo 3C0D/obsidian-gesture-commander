@@ -62,6 +62,10 @@ function smoothSegment(points: Point[]): Point[] {
  * @param cornerAngleThreshold Angle in degrees below which a point is a corner (default 40)
  * @param straightLineTolerance Max perpendicular deviation in px to consider a segment straight (default 4)
  */
+// Runs once, after the stroke is finished (not live during drawing) —
+// corner detection needs to see points ahead of any given point to know
+// whether it's a deliberate turn or just hand tremor, so it can't work
+// point-by-point in real time.
 export function stabilizeStroke(
 	points: Point[],
 	cornerAngleThreshold: number,

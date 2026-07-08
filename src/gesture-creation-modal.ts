@@ -10,6 +10,18 @@ export class GestureCreationModal extends Modal {
 	ctx: CanvasRenderingContext2D;
 	isDrawing = false;
 	points: Point[] = [];
+	// Tracks the point count *before* stabilizeStroke() runs. A perfectly
+	// straight stroke gets collapsed to just 2 points by the correction
+	// algorithm, so checking points.length after correction would wrongly
+	// reject the cleanest possible gestures. Always validate against this,
+	// never against points.length.
+	private rawPointCount = 0;
+	// Used to filter out sub-pixel mouse jitter before it reaches
+	// stabilizeStroke(). Mirrors the same filter in gesture-capture.ts.
+	// Without it, diagonal strokes pick up more noise than vertical/horizontal
+	// ones (mouse tracking moves in a staircase pattern on diagonals), which
+	// otherwise throws off corner detection asymmetrically by direction.
+	private lastPoint: Point | null = null;
 	gestureName = '';
 	selectedCommand: Command | null = null;
 	existingMapping: GestureMapping | null = null;
@@ -194,6 +206,7 @@ export class GestureCreationModal extends Modal {
 		};
 
 		this.points.push(point);
+		this.lastPoint = point;
 		this.ctx.beginPath();
 		this.ctx.moveTo(point.x, point.y);
 	}
@@ -207,7 +220,17 @@ export class GestureCreationModal extends Modal {
 			y: event.clientY - rect.top
 		};
 
+		// Ignore movements under 2px — same threshold as gesture-capture.ts, kept
+		// identical so both capture paths produce comparably clean input for
+		// stabilizeStroke().
+		if (this.lastPoint) {
+			const dx = point.x - this.lastPoint.x;
+			const dy = point.y - this.lastPoint.y;
+			if (Math.sqrt(dx * dx + dy * dy) <= 2) return;
+		}
+
 		this.points.push(point);
+		this.lastPoint = point;
 		this.ctx.lineTo(point.x, point.y);
 		this.ctx.stroke();
 	}
@@ -215,6 +238,8 @@ export class GestureCreationModal extends Modal {
 	private handlePointerUp(): void {
 		if (!this.isDrawing) return;
 		this.isDrawing = false;
+		// Must be captured before stabilizeStroke() overwrites this.points below.
+		this.rawPointCount = this.points.length;
 		this.points = stabilizeStroke(
 			this.points,
 			this.plugin.settings.cornerAngleThreshold,
@@ -237,6 +262,8 @@ export class GestureCreationModal extends Modal {
 	private clearCanvas(): void {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.points = [];
+		this.rawPointCount = 0;
+		this.lastPoint = null;
 	}
 
 	private async saveGesture(): Promise<void> {
@@ -248,7 +275,8 @@ export class GestureCreationModal extends Modal {
 		// Auto-generate gesture name from command ID
 		this.gestureName = this.generateGestureName();
 
-		if (this.points.length < 5) {
+		// Intentionally rawPointCount, not this.points.length — see field comment above.
+		if (this.rawPointCount < 5) {
 			new Notice('Please draw a gesture on the canvas');
 			return;
 		}

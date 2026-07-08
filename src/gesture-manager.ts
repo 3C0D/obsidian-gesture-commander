@@ -31,10 +31,7 @@ export class GestureManager {
 	 * Handles a completed gesture stroke by recognizing it and executing the mapped command
 	 */
 	handleGestureComplete(stroke: GestureStroke): void {
-		const result = this.recognizer.recognize(
-			stroke.points,
-			this.settings.useProtractor
-		);
+		const result = this.recognizer.recognize(stroke.points);
 
 		if (result.score >= this.settings.recognitionThreshold) {
 			const mapping = this.findMatchingMapping(result.name, result.score);

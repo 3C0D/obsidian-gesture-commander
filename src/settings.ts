@@ -147,6 +147,14 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
 					})
+			)
+			.addExtraButton((btn) =>
+				btn.setIcon('reset').setTooltip('Reset to default').onClick(async () => {
+					this.plugin.settings.minStrokeLength = DEFAULT_SETTINGS.minStrokeLength;
+					await this.plugin.saveSettings();
+					this.plugin.updateGestureCapture();
+					this.display();
+				})
 			);
 
 		new Setting(containerEl)
@@ -162,6 +170,14 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
 					})
+			)
+			.addExtraButton((btn) =>
+				btn.setIcon('reset').setTooltip('Reset to default').onClick(async () => {
+					this.plugin.settings.maxStrokeTime = DEFAULT_SETTINGS.maxStrokeTime;
+					await this.plugin.saveSettings();
+					this.plugin.updateGestureCapture();
+					this.display();
+				})
 			);
 
 		new Setting(containerEl)
@@ -190,6 +206,14 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
 					})
+			)
+			.addExtraButton((btn) =>
+				btn.setIcon('reset').setTooltip('Reset to default').onClick(async () => {
+					this.plugin.settings.cornerAngleThreshold = DEFAULT_SETTINGS.cornerAngleThreshold;
+					await this.plugin.saveSettings();
+					this.plugin.updateGestureCapture();
+					this.display();
+				})
 			);
 
 		new Setting(containerEl)
@@ -205,6 +229,14 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
 					})
+			)
+			.addExtraButton((btn) =>
+				btn.setIcon('reset').setTooltip('Reset to default').onClick(async () => {
+					this.plugin.settings.straightLineTolerance = DEFAULT_SETTINGS.straightLineTolerance;
+					await this.plugin.saveSettings();
+					this.plugin.updateGestureCapture();
+					this.display();
+				})
 			);
 
 	}
@@ -224,18 +256,13 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						this.plugin.settings.recognitionThreshold = value;
 						await this.plugin.saveSettings();
 					})
-			);
-
-		new Setting(containerEl)
-			.setName('Use Protractor enhancement')
-			.setDesc('Use faster Protractor algorithm for recognition (experimental). Warning: reduces recognition scores by ~10% in practice.')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.useProtractor)
-					.onChange(async (value) => {
-						this.plugin.settings.useProtractor = value;
-						await this.plugin.saveSettings();
-					})
+			)
+			.addExtraButton((btn) =>
+				btn.setIcon('reset').setTooltip('Reset to default').onClick(async () => {
+					this.plugin.settings.recognitionThreshold = DEFAULT_SETTINGS.recognitionThreshold;
+					await this.plugin.saveSettings();
+					this.display();
+				})
 			);
 	}
 

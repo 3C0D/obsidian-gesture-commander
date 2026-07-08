@@ -27,7 +27,6 @@ export interface ModifierKeys {
 export interface GestureTemplate {
 	name: string;
 	points: Point[];
-	vector?: number[];
 }
 
 export interface RecognitionResult {
@@ -74,7 +73,6 @@ export interface GestureCommanderSettings {
 	enableVisualFeedback: boolean;
 	gestureMappings: GestureMapping[];
 	recognitionThreshold: number;
-	useProtractor: boolean;
 	cornerAngleThreshold: number;
 	straightLineTolerance: number;
 }

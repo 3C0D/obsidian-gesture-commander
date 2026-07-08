@@ -40,7 +40,7 @@ export class DollarRecognizer {
 	/**
 	 * Recognize a gesture from a series of points
 	 */
-	recognize(points: Point[], useProtractor = false): RecognitionResult {
+	recognize(points: Point[]): RecognitionResult {
 		const startTime = Date.now();
 
 		// Need at least 2 points to form a path
@@ -58,24 +58,13 @@ export class DollarRecognizer {
 		let bestDistance = Infinity;
 
 		for (let i = 0; i < this.templates.length; i++) {
-			let distance: number;
-
-			if (useProtractor && candidate.vector && this.templates[i].vector) {
-				// Protractor: faster cosine-based comparison
-				distance = this.optimalCosineDistance(
-					this.templates[i].vector!,
-					candidate.vector!
-				);
-			} else {
-				// Default $1: try all angles within ±45° to find best match
-				distance = this.distanceAtBestAngle(
-					candidate.points,
-					this.templates[i],
-					-ANGLE_RANGE,
-					ANGLE_RANGE,
-					ANGLE_PRECISION
-				);
-			}
+			const distance = this.distanceAtBestAngle(
+				candidate.points,
+				this.templates[i],
+				-ANGLE_RANGE,
+				ANGLE_RANGE,
+				ANGLE_PRECISION
+			);
 
 			if (distance < bestDistance) {
 				bestDistance = distance;
@@ -89,10 +78,7 @@ export class DollarRecognizer {
 			return { name: 'No match', score: 0.0, time: endTime - startTime };
 		}
 
-		// Convert distance to a 0-1 score — 0 = no match, 1 = perfect match
-		const score = useProtractor
-			? 1.0 - bestDistance
-			: 1.0 - bestDistance / HALF_DIAGONAL;
+		const score = 1.0 - bestDistance / HALF_DIAGONAL;
 		return {
 			name: this.templates[bestMatch].name,
 			score: Math.max(0, score), // clamp to 0 in case of floating point drift
@@ -164,21 +150,22 @@ export class DollarRecognizer {
 	/**
 	 * Creates a normalized gesture template from raw points using the $1 algorithm:
 	 * 1. Resamples to fixed number of points
-	 * 2. Rotates based on indicative angle
-	 * 3. Scales to a square
-	 * 4. Translates to origin
-	 * 5. Creates vector representation for Protractor
+	 * 2. Scales to a square (uniform, preserving proportions)
+	 * 3. Translates to origin
+	 *
+	 * Note: the original $1 step 2 (rotate to indicative angle) is intentionally
+	 * absent. That step made every gesture orientation-invariant: a shape and its
+	 * 180°-flipped version normalized to the same template. We need up/down and
+	 * left/right to matter (e.g. two opposite diagonals must map to different
+	 * commands), so orientation is preserved as drawn.
 	 */
 	private createTemplate(name: string, points: Point[]): GestureTemplate {
 		let processedPoints = points;
 		processedPoints = this.resample(processedPoints, NUM_POINTS);
-		const radians = this.indicativeAngle(processedPoints);
-		processedPoints = this.rotateBy(processedPoints, -radians);
 		processedPoints = this.scaleTo(processedPoints, SQUARE_SIZE);
 		processedPoints = this.translateTo(processedPoints, ORIGIN);
-		const vector = this.vectorize(processedPoints);
 
-		return { name, points: processedPoints, vector };
+		return { name, points: processedPoints };
 	}
 
 	/**
@@ -266,13 +253,17 @@ export class DollarRecognizer {
 	 */
 	private scaleTo(points: Point[], size: number): Point[] {
 		const boundingBox = this.boundingBox(points);
+		// Uniform scaling: use a single factor based on the larger dimension so
+		// the gesture's real proportions (and therefore its real angle) are
+		// preserved. Scaling each axis independently would stretch any line
+		// that isn't perfectly horizontal or vertical toward a 45° diagonal,
+		// erasing genuine angle differences between gestures.
+		const largestDimension = Math.max(boundingBox.width, boundingBox.height);
+		const scale = largestDimension === 0 ? 1 : size / largestDimension;
 		const newPoints: Point[] = [];
 
 		for (const point of points) {
-			// Scale each axis independently to fill the square
-			const qx = point.x * (size / boundingBox.width);
-			const qy = point.y * (size / boundingBox.height);
-			newPoints.push({ x: qx, y: qy });
+			newPoints.push({ x: point.x * scale, y: point.y * scale });
 		}
 
 		return newPoints;
@@ -294,46 +285,12 @@ export class DollarRecognizer {
 		return newPoints;
 	}
 
-	/**
-	 * Creates a normalized vector representation of the points for Protractor algorithm
-	 */
-	private vectorize(points: Point[]): number[] {
-		let sum = 0.0;
-		const vector: number[] = [];
-
-		for (const point of points) {
-			vector.push(point.x, point.y);
-			sum += point.x * point.x + point.y * point.y;
-		}
-
-		// Normalize to unit vector so comparison is angle-based, not magnitude-based
-		const magnitude = Math.sqrt(sum);
-		for (let i = 0; i < vector.length; i++) {
-			vector[i] /= magnitude;
-		}
-
-		return vector;
-	}
 
 	/**
-	 * Calculates the optimal cosine distance between two vectors (Protractor algorithm)
-	 */
-	private optimalCosineDistance(v1: number[], v2: number[]): number {
-		let a = 0.0;
-		let b = 0.0;
-
-		for (let i = 0; i < v1.length; i += 2) {
-			a += v1[i] * v2[i] + v1[i + 1] * v2[i + 1];
-			b += v1[i] * v2[i + 1] - v1[i + 1] * v2[i];
-		}
-
-		// Find the optimal rotation angle then compute the cosine distance
-		const angle = Math.atan(b / a);
-		return Math.acos(a * Math.cos(angle) + b * Math.sin(angle));
-	}
-
-	/**
-	 * Uses golden section search to find the angle that minimizes distance between gestures
+	 * Uses golden section search to find the angle that minimizes distance between gestures.
+	 * rotateBy() is used here (unlike in createTemplate) for a narrow ±ANGLE_RANGE search
+	 * to tolerate natural hand-angle wobble during recognition, not the old unrestricted
+	 * normalization rotation that was removed from template creation.
 	 */
 	private distanceAtBestAngle(
 		points: Point[],

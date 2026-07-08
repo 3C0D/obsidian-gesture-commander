@@ -25,9 +25,12 @@ export const ORIGIN = { x: 0, y: 0 };
 export const DIAGONAL = Math.sqrt(SQUARE_SIZE * SQUARE_SIZE + SQUARE_SIZE * SQUARE_SIZE);
 export const HALF_DIAGONAL = 0.5 * DIAGONAL;
 
-// The angle range searched during recognition: ±45° around the gesture's indicative angle.
-// Wider = more rotation-invariant but slower. 45° is the paper's recommended value.
-export const ANGLE_RANGE = deg2Rad(45.0);
+// Narrowed from the original 45° once orientation-sensitivity was added.
+// 45° was wide enough to let a diagonal and a vertical stroke match each
+// other during the angle search, which defeated the point of preserving
+// orientation in createTemplate(). 15° tolerates hand wobble without
+// bridging genuinely different angles.
+export const ANGLE_RANGE = deg2Rad(15.0);
 
 // The precision of the golden section search within the angle range.
 // 2° gives a good balance between accuracy and performance.
@@ -49,8 +52,7 @@ export const DEFAULT_SETTINGS = {
 	maxStrokeTime: 3000,
 	enableVisualFeedback: true,
 	gestureMappings: [],
-	recognitionThreshold: 0.85,
-	useProtractor: false,
+	recognitionThreshold: 0.75,
 	cornerAngleThreshold: 40,
 	straightLineTolerance: 4
 };
