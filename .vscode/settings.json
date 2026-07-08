@@ -1,11 +1,10 @@
 {
-	"npm.packageManager": "yarn",
-	// "js/ts.preferences.includePackageJsonAutoImports": "off",
-	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
-	},
-	"[markdown]": {
-		"editor.defaultFormatter": "yzhang.markdown-all-in-one"
-	},
-	"editor.formatOnSave": true
+  "npm.packageManager": "yarn",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "editor.formatOnSave": true
 }

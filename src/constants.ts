@@ -42,17 +42,17 @@ export const PHI = 0.5 * (-1.0 + Math.sqrt(5.0));
 
 // Plugin defaults
 export const DEFAULT_SETTINGS = {
-	modifierKeys: {
-		alt: true,
-		shift: false,
-		ctrl: false,
-		meta: false
-	},
-	minStrokeLength: 50,
-	maxStrokeTime: 3000,
-	enableVisualFeedback: true,
-	gestureMappings: [],
-	recognitionThreshold: 0.75,
-	cornerAngleThreshold: 40,
-	straightLineTolerance: 4
+  modifierKeys: {
+    alt: true,
+    shift: false,
+    ctrl: false,
+    meta: false
+  },
+  minStrokeLength: 50,
+  maxStrokeTime: 3000,
+  enableVisualFeedback: true,
+  gestureMappings: [],
+  recognitionThreshold: 0.75,
+  cornerAngleThreshold: 40,
+  straightLineTolerance: 4
 };

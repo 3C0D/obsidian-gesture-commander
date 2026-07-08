@@ -1,409 +1,406 @@
 import type {
-	Point,
-	ModifierKeys,
-	GestureCaptureSettings,
-	GestureStroke
+  Point,
+  ModifierKeys,
+  GestureCaptureSettings,
+  GestureStroke
 } from './types.ts';
 import { stabilizeStroke } from './stroke-processing.ts';
 
 export type { ModifierKeys, GestureCaptureSettings, GestureStroke };
 
 export class GestureCapture {
-	private isCapturing = false;
-	private currentStroke: Point[] = [];
-	private startTime = 0;
-	private settings: GestureCaptureSettings;
-	private onGestureComplete: (stroke: GestureStroke) => void;
-	private visualElement: SVGSVGElement | null = null;
-	private lastPoint: Point | null = null;
-	private modifierPressed = false;
-	private hasMovedWhilePressed = false;
-	private mouseButtonPressed = false;
+  private isCapturing = false;
+  private currentStroke: Point[] = [];
+  private startTime = 0;
+  private settings: GestureCaptureSettings;
+  private onGestureComplete: (stroke: GestureStroke) => void;
+  private visualElement: SVGSVGElement | null = null;
+  private lastPoint: Point | null = null;
+  private modifierPressed = false;
+  private hasMovedWhilePressed = false;
+  private mouseButtonPressed = false;
 
-	constructor(
-		settings: GestureCaptureSettings,
-		onGestureComplete: (stroke: GestureStroke) => void
-	) {
-		this.settings = settings;
-		this.onGestureComplete = onGestureComplete;
-	}
+  constructor(
+    settings: GestureCaptureSettings,
+    onGestureComplete: (stroke: GestureStroke) => void
+  ) {
+    this.settings = settings;
+    this.onGestureComplete = onGestureComplete;
+  }
 
-	/**
-	 * Update capture settings
-	 */
-	updateSettings(settings: Partial<GestureCaptureSettings>): void {
-		this.settings = { ...this.settings, ...settings };
-	}
+  /**
+   * Update capture settings
+   */
+  updateSettings(settings: Partial<GestureCaptureSettings>): void {
+    this.settings = { ...this.settings, ...settings };
+  }
 
-	/**
-	 * Handles keydown events to detect when modifier keys are pressed
-	 */
-	handleKeyDown = (event: KeyboardEvent): void => {
-		// Ignore if a mouse button is already down (click-and-drag protection)
-		if (this.mouseButtonPressed) {
-			return;
-		}
+  /**
+   * Handles keydown events to detect when modifier keys are pressed
+   */
+  handleKeyDown = (event: KeyboardEvent): void => {
+    // Ignore if a mouse button is already down (click-and-drag protection)
+    if (this.mouseButtonPressed) {
+      return;
+    }
 
-		// Check if required modifier keys are pressed
-		if (this.areModifierKeysPressed(event)) {
-			if (!this.modifierPressed) {
-				this.modifierPressed = true;
-				this.hasMovedWhilePressed = false;
+    // Check if required modifier keys are pressed
+    if (this.areModifierKeysPressed(event)) {
+      if (!this.modifierPressed) {
+        this.modifierPressed = true;
+        this.hasMovedWhilePressed = false;
 
-				// Don't start capture yet, wait for mouse movement
-				const target = event.target as HTMLElement;
-				if (!this.shouldIgnoreTarget(target)) {
-					// Set cursor to indicate gesture mode
-					document.body.style.cursor = 'crosshair';
-				}
-			}
-		} else if (this.modifierPressed) {
-			// An extra modifier was added on top of an already-matching combination
-			// (e.g. Alt matched first, then Ctrl was pressed too), so the current
-			// key state no longer matches exactly. Reset instead of leaving
-			// modifierPressed stuck true, which would let the next mouse move
-			// wrongly start a gesture.
-			this.modifierPressed = false;
-			this.hasMovedWhilePressed = false;
-			document.body.style.cursor = '';
-			this.stopCapture();
-		}
-	};
+        // Don't start capture yet, wait for mouse movement
+        const target = event.target as HTMLElement;
+        if (!this.shouldIgnoreTarget(target)) {
+          // Set cursor to indicate gesture mode
+          document.body.style.cursor = 'crosshair';
+        }
+      }
+    } else if (this.modifierPressed) {
+      // An extra modifier was added on top of an already-matching combination
+      // (e.g. Alt matched first, then Ctrl was pressed too), so the current
+      // key state no longer matches exactly. Reset instead of leaving
+      // modifierPressed stuck true, which would let the next mouse move
+      // wrongly start a gesture.
+      this.modifierPressed = false;
+      this.hasMovedWhilePressed = false;
+      document.body.style.cursor = '';
+      this.stopCapture();
+    }
+  };
 
-	handlePointerMove = (event: PointerEvent): void => {
-		if (event.pointerType !== 'mouse') return;
-		if (!this.modifierPressed || this.mouseButtonPressed) {
-			return;
-		}
+  handlePointerMove = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse') return;
+    if (!this.modifierPressed || this.mouseButtonPressed) {
+      return;
+    }
 
-		// Check if we should ignore this target
-		const target = event.target as HTMLElement;
-		if (this.shouldIgnoreTarget(target)) {
-			return;
-		}
+    // Check if we should ignore this target
+    const target = event.target as HTMLElement;
+    if (this.shouldIgnoreTarget(target)) {
+      return;
+    }
 
-		const point: Point = {
-			x: event.clientX,
-			y: event.clientY
-		};
+    const point: Point = {
+      x: event.clientX,
+      y: event.clientY
+    };
 
-		// Start capturing on first movement with modifier pressed
-		if (!this.isCapturing) {
-			this.startCapture(point);
-			return;
-		}
+    // Start capturing on first movement with modifier pressed
+    if (!this.isCapturing) {
+      this.startCapture(point);
+      return;
+    }
 
-		// Add point if it's far enough from the last point (noise reduction)
-		if (!this.lastPoint || this.getDistance(point, this.lastPoint) > 2) {
-			this.currentStroke.push(point);
-			this.lastPoint = point;
-			this.hasMovedWhilePressed = true;
+    // Add point if it's far enough from the last point (noise reduction)
+    if (!this.lastPoint || this.getDistance(point, this.lastPoint) > 2) {
+      this.currentStroke.push(point);
+      this.lastPoint = point;
+      this.hasMovedWhilePressed = true;
 
-			if (this.settings.enableVisualFeedback) {
-				this.updateVisualFeedback(point);
-			}
-		}
+      if (this.settings.enableVisualFeedback) {
+        this.updateVisualFeedback(point);
+      }
+    }
 
-		// Check for maximum stroke time
-		if (Date.now() - this.startTime > this.settings.maxStrokeTime) {
-			this.stopCapture();
-		}
-	};
+    // Check for maximum stroke time
+    if (Date.now() - this.startTime > this.settings.maxStrokeTime) {
+      this.stopCapture();
+    }
+  };
 
-	handlePointerDown = (event: PointerEvent): void => {
-		if (event.pointerType !== 'mouse') return;
-		if (event.button === 0) {
-			this.mouseButtonPressed = true;
-			this.modifierPressed = false;
-			this.hasMovedWhilePressed = false;
-			this.stopCapture();
-		}
-	};
+  handlePointerDown = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse') return;
+    if (event.button === 0) {
+      this.mouseButtonPressed = true;
+      this.modifierPressed = false;
+      this.hasMovedWhilePressed = false;
+      this.stopCapture();
+    }
+  };
 
-	handlePointerUp = (event: PointerEvent): void => {
-		if (event.pointerType !== 'mouse') return;
-		if (event.button === 0) {
-			this.mouseButtonPressed = false;
-		}
-	};
+  handlePointerUp = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse') return;
+    if (event.button === 0) {
+      this.mouseButtonPressed = false;
+    }
+  };
 
-	/**
-	 * Handles keyup events to detect when modifier keys are released and complete the gesture
-	 */
-	handleKeyUp = (event: KeyboardEvent): void => {
-		// Check if modifier keys are no longer pressed
-		if (!this.areModifierKeysPressed(event)) {
-			this.modifierPressed = false;
+  /**
+   * Handles keyup events to detect when modifier keys are released and complete the gesture
+   */
+  handleKeyUp = (event: KeyboardEvent): void => {
+    // Check if modifier keys are no longer pressed
+    if (!this.areModifierKeysPressed(event)) {
+      this.modifierPressed = false;
 
-			// Restore cursor
-			document.body.style.cursor = '';
+      // Restore cursor
+      document.body.style.cursor = '';
 
-			// Complete capture if we were capturing and moved
-			if (this.isCapturing && this.hasMovedWhilePressed) {
-				this.completeCapture();
-			} else if (this.isCapturing) {
-				this.stopCapture();
-			}
-		}
-	};
+      // Complete capture if we were capturing and moved
+      if (this.isCapturing && this.hasMovedWhilePressed) {
+        this.completeCapture();
+      } else if (this.isCapturing) {
+        this.stopCapture();
+      }
+    }
+  };
 
-	/**
-	 * Prevents context menu from appearing during gesture capture
-	 */
-	handleContextMenu = (event: Event): void => {
-		if (this.isCapturing) {
-			event.preventDefault();
-			event.stopPropagation();
-		}
-	};
+  /**
+   * Prevents context menu from appearing during gesture capture
+   */
+  handleContextMenu = (event: Event): void => {
+    if (this.isCapturing) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
-	/**
-	 * Starts capturing a new gesture stroke
-	 */
-	private startCapture(startPoint: Point): void {
-		this.isCapturing = true;
-		this.currentStroke = [];
-		this.startTime = Date.now();
-		this.lastPoint = null;
+  /**
+   * Starts capturing a new gesture stroke
+   */
+  private startCapture(startPoint: Point): void {
+    this.isCapturing = true;
+    this.currentStroke = [];
+    this.startTime = Date.now();
+    this.lastPoint = null;
 
-		this.currentStroke.push(startPoint);
-		this.lastPoint = startPoint;
+    this.currentStroke.push(startPoint);
+    this.lastPoint = startPoint;
 
-		if (this.settings.enableVisualFeedback) {
-			this.createVisualFeedback(startPoint);
-		}
+    if (this.settings.enableVisualFeedback) {
+      this.createVisualFeedback(startPoint);
+    }
 
-		// Cursor is already set to crosshair in handleKeyDown
-	}
+    // Cursor is already set to crosshair in handleKeyDown
+  }
 
-	/**
-	 * Completes the current gesture capture and triggers the callback
-	 */
-	private completeCapture(): void {
-		if (this.currentStroke.length < 2) {
-			this.stopCapture();
-			return;
-		}
+  /**
+   * Completes the current gesture capture and triggers the callback
+   */
+  private completeCapture(): void {
+    if (this.currentStroke.length < 2) {
+      this.stopCapture();
+      return;
+    }
 
-		// Check minimum stroke length
-		const strokeLength = this.calculateStrokeLength(this.currentStroke);
-		if (strokeLength < this.settings.minStrokeLength) {
-			this.stopCapture();
-			return;
-		}
+    // Check minimum stroke length
+    const strokeLength = this.calculateStrokeLength(this.currentStroke);
+    if (strokeLength < this.settings.minStrokeLength) {
+      this.stopCapture();
+      return;
+    }
 
-		const endTime = Date.now();
-		const modifiers = {
-			alt: this.settings.modifierKeys.alt,
-			shift: this.settings.modifierKeys.shift,
-			ctrl: this.settings.modifierKeys.ctrl,
-			meta: this.settings.modifierKeys.meta
-		};
+    const endTime = Date.now();
+    const modifiers = {
+      alt: this.settings.modifierKeys.alt,
+      shift: this.settings.modifierKeys.shift,
+      ctrl: this.settings.modifierKeys.ctrl,
+      meta: this.settings.modifierKeys.meta
+    };
 
-		const correctedPoints = stabilizeStroke(
-			this.currentStroke,
-			this.settings.cornerAngleThreshold,
-			this.settings.straightLineTolerance
-		);
+    const correctedPoints = stabilizeStroke(
+      this.currentStroke,
+      this.settings.cornerAngleThreshold,
+      this.settings.straightLineTolerance
+    );
 
-		const stroke: GestureStroke = {
-			points: correctedPoints,
-			startTime: this.startTime,
-			endTime: endTime,
-			modifiers: modifiers
-		};
+    const stroke: GestureStroke = {
+      points: correctedPoints,
+      startTime: this.startTime,
+      endTime: endTime,
+      modifiers: modifiers
+    };
 
-		this.stopCapture();
-		this.onGestureComplete(stroke);
-	}
+    this.stopCapture();
+    this.onGestureComplete(stroke);
+  }
 
-	/**
-	 * Stops the current gesture capture without triggering the callback
-	 */
-	private stopCapture(): void {
-		this.isCapturing = false;
-		this.currentStroke = [];
-		this.lastPoint = null;
+  /**
+   * Stops the current gesture capture without triggering the callback
+   */
+  private stopCapture(): void {
+    this.isCapturing = false;
+    this.currentStroke = [];
+    this.lastPoint = null;
 
-		// Restore cursor
-		document.body.style.cursor = '';
+    // Restore cursor
+    document.body.style.cursor = '';
 
-		if (this.visualElement) {
-			this.removeVisualFeedback();
-		}
-	}
+    if (this.visualElement) {
+      this.removeVisualFeedback();
+    }
+  }
 
-	/**
-	 * Checks if the modifier state exactly matches the configured combination.
-	 * This prevents a broader combination from activating a narrower one.
-	 *
-	 * AltGr is sometimes reported by the browser as key === 'AltGraph'
-	 * without altKey/ctrlKey being set natively. Treat it as Alt+Ctrl
-	 * when the configured combination requires both.
-	 */
-	private areModifierKeysPressed(event: PointerEvent | KeyboardEvent): boolean {
-		const required = this.settings.modifierKeys;
+  /**
+   * Checks if the modifier state exactly matches the configured combination.
+   * This prevents a broader combination from activating a narrower one.
+   *
+   * AltGr is sometimes reported by the browser as key === 'AltGraph'
+   * without altKey/ctrlKey being set natively. Treat it as Alt+Ctrl
+   * when the configured combination requires both.
+   */
+  private areModifierKeysPressed(event: PointerEvent | KeyboardEvent): boolean {
+    const required = this.settings.modifierKeys;
 
-		const isAltGraph = 'key' in event && event.key === 'AltGraph';
-		const altGraphMatches = isAltGraph && required.alt && required.ctrl;
+    const isAltGraph = 'key' in event && event.key === 'AltGraph';
+    const altGraphMatches = isAltGraph && required.alt && required.ctrl;
 
-		const pressedState = {
-			alt: event.altKey || altGraphMatches,
-			shift: event.shiftKey,
-			ctrl: event.ctrlKey || altGraphMatches,
-			meta: event.metaKey
-		};
+    const pressedState = {
+      alt: event.altKey || altGraphMatches,
+      shift: event.shiftKey,
+      ctrl: event.ctrlKey || altGraphMatches,
+      meta: event.metaKey
+    };
 
-		return (
-			required.alt === pressedState.alt &&
-			required.shift === pressedState.shift &&
-			required.ctrl === pressedState.ctrl &&
-			required.meta === pressedState.meta
-		);
-	}
+    return (
+      required.alt === pressedState.alt &&
+      required.shift === pressedState.shift &&
+      required.ctrl === pressedState.ctrl &&
+      required.meta === pressedState.meta
+    );
+  }
 
-	/**
-	 * Determines if gesture capture should be ignored for the given target element
-	 * Returns true for UI elements like inputs, buttons, modals, etc.
-	 */
-	private shouldIgnoreTarget(target: HTMLElement): boolean {
-		// Allow capture in main editor areas - be more permissive
-		const editorElement = target.closest(
-			'.workspace-leaf-content, .cm-editor, .markdown-source-view, .markdown-preview-view, .view-content'
-		);
-		if (editorElement) {
-			return false;
-		}
+  /**
+   * Determines if gesture capture should be ignored for the given target element
+   * Returns true for UI elements like inputs, buttons, modals, etc.
+   */
+  private shouldIgnoreTarget(target: HTMLElement): boolean {
+    // Allow capture in main editor areas - be more permissive
+    const editorElement = target.closest(
+      '.workspace-leaf-content, .cm-editor, .markdown-source-view, .markdown-preview-view, .view-content'
+    );
+    if (editorElement) {
+      return false;
+    }
 
-		// Allow capture in main workspace
-		const workspaceElement = target.closest('.workspace-split, .workspace-tabs');
-		if (workspaceElement) {
-			return false;
-		}
+    // Allow capture in main workspace
+    const workspaceElement = target.closest('.workspace-split, .workspace-tabs');
+    if (workspaceElement) {
+      return false;
+    }
 
-		// Ignore input elements, buttons, etc.
-		const tagName = target.tagName.toLowerCase();
-		const ignoredTags = ['input', 'textarea', 'button', 'select', 'option'];
+    // Ignore input elements, buttons, etc.
+    const tagName = target.tagName.toLowerCase();
+    const ignoredTags = ['input', 'textarea', 'button', 'select', 'option'];
 
-		if (ignoredTags.includes(tagName)) {
-			return true;
-		}
+    if (ignoredTags.includes(tagName)) {
+      return true;
+    }
 
-		// Ignore settings and modal areas
-		const uiElement = target.closest(
-			'.modal, .setting-tab-content, .menu, .suggestion-container'
-		);
-		if (uiElement) {
-			return true;
-		}
+    // Ignore settings and modal areas
+    const uiElement = target.closest(
+      '.modal, .setting-tab-content, .menu, .suggestion-container'
+    );
+    if (uiElement) {
+      return true;
+    }
 
-		// Ignore elements with specific classes or data attributes
-		if (
-			target.classList.contains('gesture-ignore') ||
-			target.hasAttribute('data-gesture-ignore')
-		) {
-			return true;
-		}
+    // Ignore elements with specific classes or data attributes
+    if (
+      target.classList.contains('gesture-ignore') ||
+      target.hasAttribute('data-gesture-ignore')
+    ) {
+      return true;
+    }
 
-		// Default: allow capture
-		return false;
-	}
+    // Default: allow capture
+    return false;
+  }
 
-	/**
-	 * Creates the SVG visual feedback overlay for gesture drawing
-	 */
-	private createVisualFeedback(_startPoint: Point): void {
-		// Create SVG for better line drawing
-		this.visualElement = document.createElementNS(
-			'http://www.w3.org/2000/svg',
-			'svg'
-		);
-		this.visualElement.style.position = 'fixed';
-		this.visualElement.style.pointerEvents = 'none';
-		this.visualElement.style.zIndex = '10000';
-		this.visualElement.style.top = '0';
-		this.visualElement.style.left = '0';
-		this.visualElement.style.width = '100vw';
-		this.visualElement.style.height = '100vh';
-		this.visualElement.style.opacity = '0.8';
+  /**
+   * Creates the SVG visual feedback overlay for gesture drawing
+   */
+  private createVisualFeedback(_startPoint: Point): void {
+    // Create SVG for better line drawing
+    this.visualElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.visualElement.style.position = 'fixed';
+    this.visualElement.style.pointerEvents = 'none';
+    this.visualElement.style.zIndex = '10000';
+    this.visualElement.style.top = '0';
+    this.visualElement.style.left = '0';
+    this.visualElement.style.width = '100vw';
+    this.visualElement.style.height = '100vh';
+    this.visualElement.style.opacity = '0.8';
 
-		// Create path element
-		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-		path.setAttribute(
-			'stroke',
-			getComputedStyle(document.body).getPropertyValue('--interactive-accent') ||
-				'#007acc'
-		);
-		path.setAttribute('stroke-width', '3');
-		path.setAttribute('stroke-linecap', 'round');
-		path.setAttribute('stroke-linejoin', 'round');
-		path.setAttribute('fill', 'none');
-		path.setAttribute('id', 'gesture-path');
+    // Create path element
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute(
+      'stroke',
+      getComputedStyle(document.body).getPropertyValue('--interactive-accent') ||
+        '#007acc'
+    );
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('id', 'gesture-path');
 
-		this.visualElement.appendChild(path);
-		document.body.appendChild(this.visualElement);
+    this.visualElement.appendChild(path);
+    document.body.appendChild(this.visualElement);
 
-		// Initialize path with starting point
-		this.updateVisualPath();
-	}
+    // Initialize path with starting point
+    this.updateVisualPath();
+  }
 
-	/**
-	 * Updates the visual feedback with a new point
-	 */
-	private updateVisualFeedback(_point: Point): void {
-		if (!this.visualElement) {
-			return;
-		}
-		this.updateVisualPath();
-	}
+  /**
+   * Updates the visual feedback with a new point
+   */
+  private updateVisualFeedback(_point: Point): void {
+    if (!this.visualElement) {
+      return;
+    }
+    this.updateVisualPath();
+  }
 
-	/**
-	 * Updates the SVG path to reflect the current stroke
-	 */
-	private updateVisualPath(): void {
-		if (!this.visualElement || this.currentStroke.length < 1) {
-			return;
-		}
+  /**
+   * Updates the SVG path to reflect the current stroke
+   */
+  private updateVisualPath(): void {
+    if (!this.visualElement || this.currentStroke.length < 1) {
+      return;
+    }
 
-		const path = this.visualElement.querySelector('#gesture-path');
-		if (!path) return;
+    const path = this.visualElement.querySelector('#gesture-path');
+    if (!path) return;
 
-		let pathData = `M ${this.currentStroke[0].x} ${this.currentStroke[0].y}`;
+    let pathData = `M ${this.currentStroke[0].x} ${this.currentStroke[0].y}`;
 
-		for (let i = 1; i < this.currentStroke.length; i++) {
-			pathData += ` L ${this.currentStroke[i].x} ${this.currentStroke[i].y}`;
-		}
+    for (let i = 1; i < this.currentStroke.length; i++) {
+      pathData += ` L ${this.currentStroke[i].x} ${this.currentStroke[i].y}`;
+    }
 
-		path.setAttribute('d', pathData);
-	}
+    path.setAttribute('d', pathData);
+  }
 
-	/**
-	 * Removes the visual feedback overlay from the DOM
-	 */
-	private removeVisualFeedback(): void {
-		if (this.visualElement) {
-			document.body.removeChild(this.visualElement);
-			this.visualElement = null;
-		}
-	}
+  /**
+   * Removes the visual feedback overlay from the DOM
+   */
+  private removeVisualFeedback(): void {
+    if (this.visualElement) {
+      document.body.removeChild(this.visualElement);
+      this.visualElement = null;
+    }
+  }
 
-	/**
-	 * Calculates the total length of a stroke by summing distances between consecutive points
-	 */
-	private calculateStrokeLength(points: Point[]): number {
-		let length = 0;
-		for (let i = 1; i < points.length; i++) {
-			length += this.getDistance(points[i - 1], points[i]);
-		}
-		return length;
-	}
+  /**
+   * Calculates the total length of a stroke by summing distances between consecutive points
+   */
+  private calculateStrokeLength(points: Point[]): number {
+    let length = 0;
+    for (let i = 1; i < points.length; i++) {
+      length += this.getDistance(points[i - 1], points[i]);
+    }
+    return length;
+  }
 
-	/**
-	 * Calculates the Euclidean distance between two points
-	 */
-	private getDistance(p1: Point, p2: Point): number {
-		const dx = p2.x - p1.x;
-		const dy = p2.y - p1.y;
-		return Math.sqrt(dx * dx + dy * dy);
-	}
+  /**
+   * Calculates the Euclidean distance between two points
+   */
+  private getDistance(p1: Point, p2: Point): number {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 }

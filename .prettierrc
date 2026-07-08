@@ -1,6 +1,6 @@
 {
-	"useTabs": true,
-	"tabWidth": 4,
+	"useTabs": false,
+	"tabWidth": 2,
 	"printWidth": 90,
 	"endOfLine": "lf",
 	"trailingComma": "none",

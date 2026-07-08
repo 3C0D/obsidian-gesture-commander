@@ -7,7 +7,7 @@ import type {
 
 const configs: Linter.Config[] = [
   {
-    ignores: ["eslint.config.mts"]
+    ignores: ["eslint.config.mts", "scripts/**"]
   },
   {
     files: ["**/*.ts"],
@@ -37,7 +37,11 @@ const configs: Linter.Config[] = [
 
       // Useful rules but not too strict
       "semi": "error",
+      "eqeqeq": ["error", "always"],
+      "prefer-const": "error",
       "@typescript-eslint/explicit-function-return-type": ["warn", { "allowExpressions": true }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/consistent-type-imports": ["warn", { "prefer": "type-imports" }],
 
       // Disable overly strict rules
       "@typescript-eslint/no-unsafe-assignment": "off",

@@ -10,13 +10,13 @@
 
 import type { Point, Rectangle, GestureTemplate, RecognitionResult } from './types.ts';
 import {
-	NUM_POINTS,
-	SQUARE_SIZE,
-	ORIGIN,
-	HALF_DIAGONAL,
-	ANGLE_RANGE,
-	ANGLE_PRECISION,
-	PHI
+  NUM_POINTS,
+  SQUARE_SIZE,
+  ORIGIN,
+  HALF_DIAGONAL,
+  ANGLE_RANGE,
+  ANGLE_PRECISION,
+  PHI
 } from './constants.ts';
 
 export type { Point, Rectangle, GestureTemplate, RecognitionResult };
@@ -31,373 +31,370 @@ export type { Point, Rectangle, GestureTemplate, RecognitionResult };
  * and a confidence score between 0 and 1.
  */
 export class DollarRecognizer {
-	private templates: GestureTemplate[] = [];
+  private templates: GestureTemplate[] = [];
 
-	constructor() {
-		this.loadDefaultTemplates();
-	}
+  constructor() {
+    this.loadDefaultTemplates();
+  }
 
-	/**
-	 * Recognize a gesture from a series of points
-	 */
-	recognize(points: Point[]): RecognitionResult {
-		const startTime = Date.now();
+  /**
+   * Recognize a gesture from a series of points
+   */
+  recognize(points: Point[]): RecognitionResult {
+    const startTime = Date.now();
 
-		// Need at least 2 points to form a path
-		if (points.length < 2) {
-			return {
-				name: 'No match',
-				score: 0.0,
-				time: Date.now() - startTime
-			};
-		}
+    // Need at least 2 points to form a path
+    if (points.length < 2) {
+      return {
+        name: 'No match',
+        score: 0.0,
+        time: Date.now() - startTime
+      };
+    }
 
-		// Normalize the input the same way templates were normalized
-		const candidate = this.createTemplate('', points);
-		let bestMatch = -1;
-		let bestDistance = Infinity;
+    // Normalize the input the same way templates were normalized
+    const candidate = this.createTemplate('', points);
+    let bestMatch = -1;
+    let bestDistance = Infinity;
 
-		for (let i = 0; i < this.templates.length; i++) {
-			const distance = this.distanceAtBestAngle(
-				candidate.points,
-				this.templates[i],
-				-ANGLE_RANGE,
-				ANGLE_RANGE,
-				ANGLE_PRECISION
-			);
+    for (let i = 0; i < this.templates.length; i++) {
+      const distance = this.distanceAtBestAngle(
+        candidate.points,
+        this.templates[i],
+        -ANGLE_RANGE,
+        ANGLE_RANGE,
+        ANGLE_PRECISION
+      );
 
-			if (distance < bestDistance) {
-				bestDistance = distance;
-				bestMatch = i;
-			}
-		}
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestMatch = i;
+      }
+    }
 
-		const endTime = Date.now();
+    const endTime = Date.now();
 
-		if (bestMatch === -1) {
-			return { name: 'No match', score: 0.0, time: endTime - startTime };
-		}
+    if (bestMatch === -1) {
+      return { name: 'No match', score: 0.0, time: endTime - startTime };
+    }
 
-		const score = 1.0 - bestDistance / HALF_DIAGONAL;
-		return {
-			name: this.templates[bestMatch].name,
-			score: Math.max(0, score), // clamp to 0 in case of floating point drift
-			time: endTime - startTime
-		};
-	}
+    const score = 1.0 - bestDistance / HALF_DIAGONAL;
+    return {
+      name: this.templates[bestMatch].name,
+      score: Math.max(0, score), // clamp to 0 in case of floating point drift
+      time: endTime - startTime
+    };
+  }
 
-	/**
-	 * Add a new gesture template
-	 */
-	addGesture(name: string, points: Point[]): number {
-		const template = this.createTemplate(name, points);
-		this.templates.push(template);
-		return this.templates.filter((t) => t.name === name).length;
-	}
+  /**
+   * Add a new gesture template
+   */
+  addGesture(name: string, points: Point[]): number {
+    const template = this.createTemplate(name, points);
+    this.templates.push(template);
+    return this.templates.filter((t) => t.name === name).length;
+  }
 
-	/**
-	 * Remove all user-defined gestures (keep only defaults)
-	 */
-	deleteUserGestures(): void {
-		this.templates = [];
-		this.loadDefaultTemplates();
-	}
+  /**
+   * Remove all user-defined gestures (keep only defaults)
+   */
+  deleteUserGestures(): void {
+    this.templates = [];
+    this.loadDefaultTemplates();
+  }
 
-	/**
-	 * Get all template names
-	 */
-	getTemplateNames(): string[] {
-		return [...new Set(this.templates.map((t) => t.name))];
-	}
+  /**
+   * Get all template names
+   */
+  getTemplateNames(): string[] {
+    return [...new Set(this.templates.map((t) => t.name))];
+  }
 
-	/**
-	 * Get templates by name
-	 */
-	getTemplatesByName(name: string): GestureTemplate[] {
-		return this.templates.filter((t) => t.name === name);
-	}
+  /**
+   * Get templates by name
+   */
+  getTemplatesByName(name: string): GestureTemplate[] {
+    return this.templates.filter((t) => t.name === name);
+  }
 
-	/**
-	 * Remove templates by name
-	 */
-	removeTemplatesByName(name: string): void {
-		this.templates = this.templates.filter((t) => t.name !== name);
-	}
+  /**
+   * Remove templates by name
+   */
+  removeTemplatesByName(name: string): void {
+    this.templates = this.templates.filter((t) => t.name !== name);
+  }
 
-	/**
-	 * Export all templates
-	 */
-	exportTemplates(): GestureTemplate[] {
-		// Deep clone to avoid external mutation of internal state
-		return JSON.parse(JSON.stringify(this.templates));
-	}
+  /**
+   * Export all templates
+   */
+  exportTemplates(): GestureTemplate[] {
+    // Deep clone to avoid external mutation of internal state
+    return JSON.parse(JSON.stringify(this.templates));
+  }
 
-	/**
-	 * Import templates
-	 */
-	importTemplates(templates: GestureTemplate[]): void {
-		this.templates = [];
-		this.loadDefaultTemplates();
+  /**
+   * Import templates
+   */
+  importTemplates(templates: GestureTemplate[]): void {
+    this.templates = [];
+    this.loadDefaultTemplates();
 
-		templates.forEach((template) => {
-			// Skip malformed entries
-			if (template.name && template.points && Array.isArray(template.points)) {
-				this.addGesture(template.name, template.points);
-			}
-		});
-	}
+    templates.forEach((template) => {
+      // Skip malformed entries
+      if (template.name && template.points && Array.isArray(template.points)) {
+        this.addGesture(template.name, template.points);
+      }
+    });
+  }
 
-	/**
-	 * Creates a normalized gesture template from raw points using the $1 algorithm:
-	 * 1. Resamples to fixed number of points
-	 * 2. Scales to a square (uniform, preserving proportions)
-	 * 3. Translates to origin
-	 *
-	 * Note: the original $1 step 2 (rotate to indicative angle) is intentionally
-	 * absent. That step made every gesture orientation-invariant: a shape and its
-	 * 180°-flipped version normalized to the same template. We need up/down and
-	 * left/right to matter (e.g. two opposite diagonals must map to different
-	 * commands), so orientation is preserved as drawn.
-	 */
-	private createTemplate(name: string, points: Point[]): GestureTemplate {
-		let processedPoints = points;
-		processedPoints = this.resample(processedPoints, NUM_POINTS);
-		processedPoints = this.scaleTo(processedPoints, SQUARE_SIZE);
-		processedPoints = this.translateTo(processedPoints, ORIGIN);
+  /**
+   * Creates a normalized gesture template from raw points using the $1 algorithm:
+   * 1. Resamples to fixed number of points
+   * 2. Scales to a square (uniform, preserving proportions)
+   * 3. Translates to origin
+   *
+   * Note: the original $1 step 2 (rotate to indicative angle) is intentionally
+   * absent. That step made every gesture orientation-invariant: a shape and its
+   * 180°-flipped version normalized to the same template. We need up/down and
+   * left/right to matter (e.g. two opposite diagonals must map to different
+   * commands), so orientation is preserved as drawn.
+   */
+  private createTemplate(name: string, points: Point[]): GestureTemplate {
+    let processedPoints = points;
+    processedPoints = this.resample(processedPoints, NUM_POINTS);
+    processedPoints = this.scaleTo(processedPoints, SQUARE_SIZE);
+    processedPoints = this.translateTo(processedPoints, ORIGIN);
 
-		return { name, points: processedPoints };
-	}
+    return { name, points: processedPoints };
+  }
 
-	/**
-	 * Loads default gesture templates (currently empty to avoid interference)
-	 */
-	private loadDefaultTemplates(): void {
-		// Intentionally empty — all gestures are user-defined
-		// The original $1 library ships with built-in shapes (circle, triangle...)
-		// which would interfere with user recognition
-	}
+  /**
+   * Loads default gesture templates (currently empty to avoid interference)
+   */
+  private loadDefaultTemplates(): void {
+    // Intentionally empty — all gestures are user-defined
+    // The original $1 library ships with built-in shapes (circle, triangle...)
+    // which would interfere with user recognition
+  }
 
-	/**
-	 * Resamples a path to have exactly n evenly-spaced points.
-	 * Works on a local copy of the input, since the interpolation step
-	 * below inserts points as it walks the array; mutating the caller's
-	 * array in place would corrupt stored data such as
-	 * GestureMapping.originalPoints on repeated calls.
-	 */
-	private resample(inputPoints: Point[], n: number): Point[] {
-		const points = [...inputPoints];
-		const interval = this.pathLength(points) / (n - 1); // target spacing between points
-		let distance = 0.0;
-		const newPoints: Point[] = [points[0]];
+  /**
+   * Resamples a path to have exactly n evenly-spaced points.
+   * Works on a local copy of the input, since the interpolation step
+   * below inserts points as it walks the array; mutating the caller's
+   * array in place would corrupt stored data such as
+   * GestureMapping.originalPoints on repeated calls.
+   */
+  private resample(inputPoints: Point[], n: number): Point[] {
+    const points = [...inputPoints];
+    const interval = this.pathLength(points) / (n - 1); // target spacing between points
+    let distance = 0.0;
+    const newPoints: Point[] = [points[0]];
 
-		for (let i = 1; i < points.length; i++) {
-			const d = this.distance(points[i - 1], points[i]);
-			if (distance + d >= interval) {
-				// Interpolate a new point exactly at the interval boundary
-				const qx =
-					points[i - 1].x +
-					((interval - distance) / d) * (points[i].x - points[i - 1].x);
-				const qy =
-					points[i - 1].y +
-					((interval - distance) / d) * (points[i].y - points[i - 1].y);
-				const q: Point = { x: qx, y: qy };
-				newPoints.push(q);
-				// Insert q back into the local copy so it becomes the new starting point
-				points.splice(i, 0, q);
-				distance = 0.0;
-			} else {
-				distance += d;
-			}
-		}
+    for (let i = 1; i < points.length; i++) {
+      const d = this.distance(points[i - 1], points[i]);
+      if (distance + d >= interval) {
+        // Interpolate a new point exactly at the interval boundary
+        const qx =
+          points[i - 1].x + ((interval - distance) / d) * (points[i].x - points[i - 1].x);
+        const qy =
+          points[i - 1].y + ((interval - distance) / d) * (points[i].y - points[i - 1].y);
+        const q: Point = { x: qx, y: qy };
+        newPoints.push(q);
+        // Insert q back into the local copy so it becomes the new starting point
+        points.splice(i, 0, q);
+        distance = 0.0;
+      } else {
+        distance += d;
+      }
+    }
 
-		// Floating point rounding can leave us one point short — pad with last point
-		if (newPoints.length === n - 1) {
-			newPoints.push({
-				x: points[points.length - 1].x,
-				y: points[points.length - 1].y
-			});
-		}
+    // Floating point rounding can leave us one point short — pad with last point
+    if (newPoints.length === n - 1) {
+      newPoints.push({
+        x: points[points.length - 1].x,
+        y: points[points.length - 1].y
+      });
+    }
 
-		return newPoints;
-	}
+    return newPoints;
+  }
 
-	/**
-	 * Calculates the indicative angle from centroid to first point
-	 */
-	private indicativeAngle(points: Point[]): number {
-		const c = this.centroid(points);
-		return Math.atan2(c.y - points[0].y, c.x - points[0].x);
-	}
+  /**
+   * Calculates the indicative angle from centroid to first point
+   */
+  private indicativeAngle(points: Point[]): number {
+    const c = this.centroid(points);
+    return Math.atan2(c.y - points[0].y, c.x - points[0].x);
+  }
 
-	/**
-	 * Rotates all points by the given angle (in radians) around their centroid
-	 */
-	private rotateBy(points: Point[], radians: number): Point[] {
-		const c = this.centroid(points);
-		const cos = Math.cos(radians);
-		const sin = Math.sin(radians);
-		const newPoints: Point[] = [];
+  /**
+   * Rotates all points by the given angle (in radians) around their centroid
+   */
+  private rotateBy(points: Point[], radians: number): Point[] {
+    const c = this.centroid(points);
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const newPoints: Point[] = [];
 
-		for (const point of points) {
-			// Standard 2D rotation matrix around centroid
-			const qx = (point.x - c.x) * cos - (point.y - c.y) * sin + c.x;
-			const qy = (point.x - c.x) * sin + (point.y - c.y) * cos + c.y;
-			newPoints.push({ x: qx, y: qy });
-		}
+    for (const point of points) {
+      // Standard 2D rotation matrix around centroid
+      const qx = (point.x - c.x) * cos - (point.y - c.y) * sin + c.x;
+      const qy = (point.x - c.x) * sin + (point.y - c.y) * cos + c.y;
+      newPoints.push({ x: qx, y: qy });
+    }
 
-		return newPoints;
-	}
+    return newPoints;
+  }
 
-	/**
-	 * Scales all points to fit within a square of the given size
-	 */
-	private scaleTo(points: Point[], size: number): Point[] {
-		const boundingBox = this.boundingBox(points);
-		// Uniform scaling: use a single factor based on the larger dimension so
-		// the gesture's real proportions (and therefore its real angle) are
-		// preserved. Scaling each axis independently would stretch any line
-		// that isn't perfectly horizontal or vertical toward a 45° diagonal,
-		// erasing genuine angle differences between gestures.
-		const largestDimension = Math.max(boundingBox.width, boundingBox.height);
-		const scale = largestDimension === 0 ? 1 : size / largestDimension;
-		const newPoints: Point[] = [];
+  /**
+   * Scales all points to fit within a square of the given size
+   */
+  private scaleTo(points: Point[], size: number): Point[] {
+    const boundingBox = this.boundingBox(points);
+    // Uniform scaling: use a single factor based on the larger dimension so
+    // the gesture's real proportions (and therefore its real angle) are
+    // preserved. Scaling each axis independently would stretch any line
+    // that isn't perfectly horizontal or vertical toward a 45° diagonal,
+    // erasing genuine angle differences between gestures.
+    const largestDimension = Math.max(boundingBox.width, boundingBox.height);
+    const scale = largestDimension === 0 ? 1 : size / largestDimension;
+    const newPoints: Point[] = [];
 
-		for (const point of points) {
-			newPoints.push({ x: point.x * scale, y: point.y * scale });
-		}
+    for (const point of points) {
+      newPoints.push({ x: point.x * scale, y: point.y * scale });
+    }
 
-		return newPoints;
-	}
+    return newPoints;
+  }
 
-	/**
-	 * Translates all points so their centroid is at the given point
-	 */
-	private translateTo(points: Point[], pt: Point): Point[] {
-		const c = this.centroid(points);
-		const newPoints: Point[] = [];
+  /**
+   * Translates all points so their centroid is at the given point
+   */
+  private translateTo(points: Point[], pt: Point): Point[] {
+    const c = this.centroid(points);
+    const newPoints: Point[] = [];
 
-		for (const point of points) {
-			const qx = point.x + pt.x - c.x;
-			const qy = point.y + pt.y - c.y;
-			newPoints.push({ x: qx, y: qy });
-		}
+    for (const point of points) {
+      const qx = point.x + pt.x - c.x;
+      const qy = point.y + pt.y - c.y;
+      newPoints.push({ x: qx, y: qy });
+    }
 
-		return newPoints;
-	}
+    return newPoints;
+  }
 
+  /**
+   * Uses golden section search to find the angle that minimizes distance between gestures.
+   * rotateBy() is used here (unlike in createTemplate) for a narrow ±ANGLE_RANGE search
+   * to tolerate natural hand-angle wobble during recognition, not the old unrestricted
+   * normalization rotation that was removed from template creation.
+   */
+  private distanceAtBestAngle(
+    points: Point[],
+    template: GestureTemplate,
+    a: number,
+    b: number,
+    threshold: number
+  ): number {
+    // Golden section search — narrows the angle range until precision threshold is reached
+    let x1 = PHI * a + (1.0 - PHI) * b;
+    let f1 = this.distanceAtAngle(points, template, x1);
+    let x2 = (1.0 - PHI) * a + PHI * b;
+    let f2 = this.distanceAtAngle(points, template, x2);
 
-	/**
-	 * Uses golden section search to find the angle that minimizes distance between gestures.
-	 * rotateBy() is used here (unlike in createTemplate) for a narrow ±ANGLE_RANGE search
-	 * to tolerate natural hand-angle wobble during recognition, not the old unrestricted
-	 * normalization rotation that was removed from template creation.
-	 */
-	private distanceAtBestAngle(
-		points: Point[],
-		template: GestureTemplate,
-		a: number,
-		b: number,
-		threshold: number
-	): number {
-		// Golden section search — narrows the angle range until precision threshold is reached
-		let x1 = PHI * a + (1.0 - PHI) * b;
-		let f1 = this.distanceAtAngle(points, template, x1);
-		let x2 = (1.0 - PHI) * a + PHI * b;
-		let f2 = this.distanceAtAngle(points, template, x2);
+    while (Math.abs(b - a) > threshold) {
+      if (f1 < f2) {
+        b = x2;
+        x2 = x1;
+        f2 = f1;
+        x1 = PHI * a + (1.0 - PHI) * b;
+        f1 = this.distanceAtAngle(points, template, x1);
+      } else {
+        a = x1;
+        x1 = x2;
+        f1 = f2;
+        x2 = (1.0 - PHI) * a + PHI * b;
+        f2 = this.distanceAtAngle(points, template, x2);
+      }
+    }
 
-		while (Math.abs(b - a) > threshold) {
-			if (f1 < f2) {
-				b = x2;
-				x2 = x1;
-				f2 = f1;
-				x1 = PHI * a + (1.0 - PHI) * b;
-				f1 = this.distanceAtAngle(points, template, x1);
-			} else {
-				a = x1;
-				x1 = x2;
-				f1 = f2;
-				x2 = (1.0 - PHI) * a + PHI * b;
-				f2 = this.distanceAtAngle(points, template, x2);
-			}
-		}
+    return Math.min(f1, f2);
+  }
 
-		return Math.min(f1, f2);
-	}
+  /**
+   * Calculates the distance between points and template at a specific rotation angle
+   */
+  private distanceAtAngle(
+    points: Point[],
+    template: GestureTemplate,
+    radians: number
+  ): number {
+    const newPoints = this.rotateBy(points, radians);
+    return this.pathDistance(newPoints, template.points);
+  }
 
-	/**
-	 * Calculates the distance between points and template at a specific rotation angle
-	 */
-	private distanceAtAngle(
-		points: Point[],
-		template: GestureTemplate,
-		radians: number
-	): number {
-		const newPoints = this.rotateBy(points, radians);
-		return this.pathDistance(newPoints, template.points);
-	}
+  /**
+   * Calculates the geometric center (centroid) of a set of points
+   */
+  private centroid(points: Point[]): Point {
+    let x = 0.0;
+    let y = 0.0;
 
-	/**
-	 * Calculates the geometric center (centroid) of a set of points
-	 */
-	private centroid(points: Point[]): Point {
-		let x = 0.0;
-		let y = 0.0;
+    for (const point of points) {
+      x += point.x;
+      y += point.y;
+    }
 
-		for (const point of points) {
-			x += point.x;
-			y += point.y;
-		}
+    return { x: x / points.length, y: y / points.length };
+  }
 
-		return { x: x / points.length, y: y / points.length };
-	}
+  /**
+   * Calculates the bounding box that contains all points
+   */
+  private boundingBox(points: Point[]): Rectangle {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
 
-	/**
-	 * Calculates the bounding box that contains all points
-	 */
-	private boundingBox(points: Point[]): Rectangle {
-		let minX = Infinity;
-		let maxX = -Infinity;
-		let minY = Infinity;
-		let maxY = -Infinity;
+    for (const point of points) {
+      minX = Math.min(minX, point.x);
+      minY = Math.min(minY, point.y);
+      maxX = Math.max(maxX, point.x);
+      maxY = Math.max(maxY, point.y);
+    }
 
-		for (const point of points) {
-			minX = Math.min(minX, point.x);
-			minY = Math.min(minY, point.y);
-			maxX = Math.max(maxX, point.x);
-			maxY = Math.max(maxY, point.y);
-		}
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  }
 
-		return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-	}
+  /**
+   * Calculates the average distance between corresponding points in two paths
+   */
+  private pathDistance(pts1: Point[], pts2: Point[]): number {
+    let d = 0.0;
+    for (let i = 0; i < pts1.length; i++) {
+      d += this.distance(pts1[i], pts2[i]);
+    }
+    return d / pts1.length;
+  }
 
-	/**
-	 * Calculates the average distance between corresponding points in two paths
-	 */
-	private pathDistance(pts1: Point[], pts2: Point[]): number {
-		let d = 0.0;
-		for (let i = 0; i < pts1.length; i++) {
-			d += this.distance(pts1[i], pts2[i]);
-		}
-		return d / pts1.length;
-	}
+  /**
+   * Calculates the total length of a path by summing distances between consecutive points
+   */
+  private pathLength(points: Point[]): number {
+    let d = 0.0;
+    for (let i = 1; i < points.length; i++) {
+      d += this.distance(points[i - 1], points[i]);
+    }
+    return d;
+  }
 
-	/**
-	 * Calculates the total length of a path by summing distances between consecutive points
-	 */
-	private pathLength(points: Point[]): number {
-		let d = 0.0;
-		for (let i = 1; i < points.length; i++) {
-			d += this.distance(points[i - 1], points[i]);
-		}
-		return d;
-	}
-
-	/**
-	 * Calculates the Euclidean distance between two points
-	 */
-	private distance(p1: Point, p2: Point): number {
-		const dx = p2.x - p1.x;
-		const dy = p2.y - p1.y;
-		return Math.sqrt(dx * dx + dy * dy);
-	}
+  /**
+   * Calculates the Euclidean distance between two points
+   */
+  private distance(p1: Point, p2: Point): number {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 }

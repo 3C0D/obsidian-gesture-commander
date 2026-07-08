@@ -1,85 +1,85 @@
 // --- Geometry ---
 
 export interface Point {
-	x: number;
-	y: number;
+  x: number;
+  y: number;
 }
 
 export interface Rectangle {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 // --- Modifier keys ---
 
 export interface ModifierKeys {
-	alt: boolean;
-	shift: boolean;
-	ctrl: boolean;
-	meta: boolean;
-	altGraph?: boolean;
+  alt: boolean;
+  shift: boolean;
+  ctrl: boolean;
+  meta: boolean;
+  altGraph?: boolean;
 }
 
 // --- Gesture recognizer ---
 
 export interface GestureTemplate {
-	name: string;
-	points: Point[];
+  name: string;
+  points: Point[];
 }
 
 export interface RecognitionResult {
-	name: string;
-	score: number;
-	time: number;
+  name: string;
+  score: number;
+  time: number;
 }
 
 // --- Gesture capture ---
 
 export interface GestureCaptureSettings {
-	modifierKeys: ModifierKeys;
-	minStrokeLength: number;
-	maxStrokeTime: number;
-	enableVisualFeedback: boolean;
-	cornerAngleThreshold: number;
-	straightLineTolerance: number;
+  modifierKeys: ModifierKeys;
+  minStrokeLength: number;
+  maxStrokeTime: number;
+  enableVisualFeedback: boolean;
+  cornerAngleThreshold: number;
+  straightLineTolerance: number;
 }
 
 export interface GestureStroke {
-	points: Point[];
-	startTime: number;
-	endTime: number;
-	modifiers: ModifierKeys;
+  points: Point[];
+  startTime: number;
+  endTime: number;
+  modifiers: ModifierKeys;
 }
 
 // --- Plugin settings ---
 
 export interface GestureMapping {
-	id: string;
-	gestureName: string;
-	commandId: string;
-	commandName: string;
-	enabled: boolean;
-	minScore: number;
-	showNotice: boolean;
-	originalPoints?: Point[];
+  id: string;
+  gestureName: string;
+  commandId: string;
+  commandName: string;
+  enabled: boolean;
+  minScore: number;
+  showNotice: boolean;
+  originalPoints?: Point[];
 }
 
 export interface GestureCommanderSettings {
-	modifierKeys: ModifierKeys;
-	minStrokeLength: number;
-	maxStrokeTime: number;
-	enableVisualFeedback: boolean;
-	gestureMappings: GestureMapping[];
-	recognitionThreshold: number;
-	cornerAngleThreshold: number;
-	straightLineTolerance: number;
+  modifierKeys: ModifierKeys;
+  minStrokeLength: number;
+  maxStrokeTime: number;
+  enableVisualFeedback: boolean;
+  gestureMappings: GestureMapping[];
+  recognitionThreshold: number;
+  cornerAngleThreshold: number;
+  straightLineTolerance: number;
 }
 
 // --- Obsidian commands ---
 
 export interface Command {
-	id: string;
-	name?: string;
+  id: string;
+  name?: string;
 }
