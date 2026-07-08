@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-gesture-commander",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "Execute commands by drawing mouse gestures while holding modifier keys",
 	"type": "module",
 	"main": "src/index.ts",
