@@ -2,6 +2,7 @@ import { App, Modal, Setting, Notice } from 'obsidian';
 import GestureCommanderPlugin from './main.ts';
 import type { Point, GestureMapping, Command } from './types.ts';
 import { CommandSuggest } from './command-suggester.ts';
+import { stabilizeStroke } from './stroke-processing.ts';
 
 export class GestureCreationModal extends Modal {
 	plugin: GestureCommanderPlugin;
@@ -212,7 +213,25 @@ export class GestureCreationModal extends Modal {
 	}
 
 	private handlePointerUp(): void {
+		if (!this.isDrawing) return;
 		this.isDrawing = false;
+		this.points = stabilizeStroke(
+			this.points,
+			this.plugin.settings.cornerAngleThreshold,
+			this.plugin.settings.straightLineTolerance
+		);
+		this.drawSmoothedPath(this.points);
+	}
+
+	private drawSmoothedPath(points: Point[]): void {
+		if (points.length < 2) return;
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.beginPath();
+		this.ctx.moveTo(points[0].x, points[0].y);
+		for (let i = 1; i < points.length; i++) {
+			this.ctx.lineTo(points[i].x, points[i].y);
+		}
+		this.ctx.stroke();
 	}
 
 	private clearCanvas(): void {
@@ -245,8 +264,7 @@ export class GestureCreationModal extends Modal {
 			// Add gesture to recognizer with original canvas points
 			this.plugin.gestureRecognizer.addGesture(
 				this.gestureName,
-				this.points,
-				this.plugin.settings.enableSmoothing
+				this.points
 			);
 
 			// Create or update mapping with original points for preview

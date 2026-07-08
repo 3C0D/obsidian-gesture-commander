@@ -49,7 +49,8 @@ export const DEFAULT_SETTINGS = {
 	maxStrokeTime: 3000,
 	enableVisualFeedback: true,
 	gestureMappings: [],
-	recognitionThreshold: 0.6,
+	recognitionThreshold: 0.85,
 	useProtractor: false,
-	enableSmoothing: true
+	cornerAngleThreshold: 40,
+	straightLineTolerance: 4
 };

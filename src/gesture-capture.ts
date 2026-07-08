@@ -4,6 +4,7 @@ import type {
 	GestureCaptureSettings,
 	GestureStroke
 } from './types.ts';
+import { stabilizeStroke } from './stroke-processing.ts';
 
 export type { ModifierKeys, GestureCaptureSettings, GestureStroke };
 
@@ -199,8 +200,14 @@ export class GestureCapture {
 			meta: this.settings.modifierKeys.meta
 		};
 
+		const correctedPoints = stabilizeStroke(
+			this.currentStroke,
+			this.settings.cornerAngleThreshold,
+			this.settings.straightLineTolerance
+		);
+
 		const stroke: GestureStroke = {
-			points: [...this.currentStroke],
+			points: correctedPoints,
 			startTime: this.startTime,
 			endTime: endTime,
 			modifiers: modifiers

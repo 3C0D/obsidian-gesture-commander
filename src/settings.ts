@@ -178,18 +178,35 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Smooth gestures')
-			.setDesc(
-				'Reduce mouse/trackpad jitter before recognition, using a moving average over the drawn path. Applies to both new gestures and live recognition; does not affect the on-screen trail while drawing.'
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.enableSmoothing)
+			.setName('Corner angle threshold')
+			.setDesc('Angle in degrees below which a point is considered a corner (10–90°)')
+			.addSlider((slider) =>
+				slider
+					.setLimits(10, 90, 5)
+					.setValue(this.plugin.settings.cornerAngleThreshold)
+					.setDynamicTooltip()
 					.onChange(async (value) => {
-						this.plugin.settings.enableSmoothing = value;
+						this.plugin.settings.cornerAngleThreshold = value;
 						await this.plugin.saveSettings();
+						this.plugin.updateGestureCapture();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName('Straight line tolerance')
+			.setDesc('Max perpendicular deviation in pixels to straighten a segment (1–15px)')
+			.addSlider((slider) =>
+				slider
+					.setLimits(1, 15, 1)
+					.setValue(this.plugin.settings.straightLineTolerance)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.straightLineTolerance = value;
+						await this.plugin.saveSettings();
+						this.plugin.updateGestureCapture();
+					})
+			);
+
 	}
 
 	private addRecognitionSettings(containerEl: HTMLElement): void {
@@ -211,7 +228,7 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Use Protractor enhancement')
-			.setDesc('Use faster Protractor algorithm for recognition (experimental)')
+			.setDesc('Use faster Protractor algorithm for recognition (experimental). Warning: reduces recognition scores by ~10% in practice.')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.useProtractor)

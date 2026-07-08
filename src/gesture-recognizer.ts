@@ -40,7 +40,7 @@ export class DollarRecognizer {
 	/**
 	 * Recognize a gesture from a series of points
 	 */
-	recognize(points: Point[], useProtractor = false, smoothing = true): RecognitionResult {
+	recognize(points: Point[], useProtractor = false): RecognitionResult {
 		const startTime = Date.now();
 
 		// Need at least 2 points to form a path
@@ -53,7 +53,7 @@ export class DollarRecognizer {
 		}
 
 		// Normalize the input the same way templates were normalized
-		const candidate = this.createTemplate('', points, smoothing);
+		const candidate = this.createTemplate('', points);
 		let bestMatch = -1;
 		let bestDistance = Infinity;
 
@@ -103,8 +103,8 @@ export class DollarRecognizer {
 	/**
 	 * Add a new gesture template
 	 */
-	addGesture(name: string, points: Point[], smoothing = true): number {
-		const template = this.createTemplate(name, points, smoothing);
+	addGesture(name: string, points: Point[]): number {
+		const template = this.createTemplate(name, points);
 		this.templates.push(template);
 		return this.templates.filter((t) => t.name === name).length;
 	}
@@ -162,41 +162,6 @@ export class DollarRecognizer {
 	}
 
 	/**
-	 * Smooths a path with a simple moving average to reduce mouse/trackpad
-	 * jitter before recognition. Endpoints are kept anchored (not averaged)
-	 * so the gesture's start and end position aren't shifted.
-	 */
-	private smoothPoints(points: Point[], windowSize = 3): Point[] {
-		if (points.length < windowSize) return points;
-
-		const half = Math.floor(windowSize / 2);
-		const smoothed: Point[] = [];
-
-		for (let i = 0; i < points.length; i++) {
-			if (i === 0 || i === points.length - 1) {
-				smoothed.push(points[i]);
-				continue;
-			}
-
-			const start = Math.max(0, i - half);
-			const end = Math.min(points.length - 1, i + half);
-			let sumX = 0;
-			let sumY = 0;
-			let count = 0;
-
-			for (let j = start; j <= end; j++) {
-				sumX += points[j].x;
-				sumY += points[j].y;
-				count++;
-			}
-
-			smoothed.push({ x: sumX / count, y: sumY / count });
-		}
-
-		return smoothed;
-	}
-
-	/**
 	 * Creates a normalized gesture template from raw points using the $1 algorithm:
 	 * 1. Resamples to fixed number of points
 	 * 2. Rotates based on indicative angle
@@ -204,8 +169,8 @@ export class DollarRecognizer {
 	 * 4. Translates to origin
 	 * 5. Creates vector representation for Protractor
 	 */
-	private createTemplate(name: string, points: Point[], smoothing = true): GestureTemplate {
-		let processedPoints = smoothing ? this.smoothPoints(points) : points;
+	private createTemplate(name: string, points: Point[]): GestureTemplate {
+		let processedPoints = points;
 		processedPoints = this.resample(processedPoints, NUM_POINTS);
 		const radians = this.indicativeAngle(processedPoints);
 		processedPoints = this.rotateBy(processedPoints, -radians);

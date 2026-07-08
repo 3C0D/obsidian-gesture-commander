@@ -33,8 +33,7 @@ export class GestureManager {
 	handleGestureComplete(stroke: GestureStroke): void {
 		const result = this.recognizer.recognize(
 			stroke.points,
-			this.settings.useProtractor,
-			this.settings.enableSmoothing
+			this.settings.useProtractor
 		);
 
 		if (result.score >= this.settings.recognitionThreshold) {
@@ -87,8 +86,7 @@ export class GestureManager {
 			if (mapping.originalPoints && mapping.originalPoints.length > 0) {
 				this.recognizer.addGesture(
 					mapping.gestureName,
-					mapping.originalPoints,
-					this.settings.enableSmoothing
+					mapping.originalPoints
 				);
 			}
 		});

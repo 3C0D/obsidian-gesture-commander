@@ -43,6 +43,8 @@ export interface GestureCaptureSettings {
 	minStrokeLength: number;
 	maxStrokeTime: number;
 	enableVisualFeedback: boolean;
+	cornerAngleThreshold: number;
+	straightLineTolerance: number;
 }
 
 export interface GestureStroke {
@@ -73,7 +75,8 @@ export interface GestureCommanderSettings {
 	gestureMappings: GestureMapping[];
 	recognitionThreshold: number;
 	useProtractor: boolean;
-	enableSmoothing: boolean;
+	cornerAngleThreshold: number;
+	straightLineTolerance: number;
 }
 
 // --- Obsidian commands ---

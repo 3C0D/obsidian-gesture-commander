@@ -56,7 +56,9 @@ export default class GestureCommanderPlugin extends Plugin {
 			modifierKeys: this.settings.modifierKeys,
 			minStrokeLength: this.settings.minStrokeLength,
 			maxStrokeTime: this.settings.maxStrokeTime,
-			enableVisualFeedback: this.settings.enableVisualFeedback
+			enableVisualFeedback: this.settings.enableVisualFeedback,
+			cornerAngleThreshold: this.settings.cornerAngleThreshold,
+			straightLineTolerance: this.settings.straightLineTolerance
 		};
 
 		this.gestureCapture = new GestureCapture(
@@ -122,7 +124,9 @@ export default class GestureCommanderPlugin extends Plugin {
 				modifierKeys: this.settings.modifierKeys,
 				minStrokeLength: this.settings.minStrokeLength,
 				maxStrokeTime: this.settings.maxStrokeTime,
-				enableVisualFeedback: this.settings.enableVisualFeedback
+				enableVisualFeedback: this.settings.enableVisualFeedback,
+				cornerAngleThreshold: this.settings.cornerAngleThreshold,
+				straightLineTolerance: this.settings.straightLineTolerance
 			});
 		}
 	}
