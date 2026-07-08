@@ -175,18 +175,14 @@ export class GestureCreationModal extends Modal {
 	}
 
 	private setupCanvasEvents(): void {
-		this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-		this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-		this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-		this.canvas.addEventListener('mouseleave', this.handleMouseUp.bind(this));
-
-		// Touch events for mobile support
-		this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
-		this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
-		this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+		this.canvas.addEventListener('pointerdown', this.handlePointerDown.bind(this));
+		this.canvas.addEventListener('pointermove', this.handlePointerMove.bind(this));
+		this.canvas.addEventListener('pointerup', this.handlePointerUp.bind(this));
+		this.canvas.addEventListener('pointerleave', this.handlePointerUp.bind(this));
 	}
 
-	private handleMouseDown(event: MouseEvent): void {
+	private handlePointerDown(event: PointerEvent): void {
+		this.canvas.setPointerCapture(event.pointerId);
 		this.isDrawing = true;
 		this.points = [];
 
@@ -201,7 +197,7 @@ export class GestureCreationModal extends Modal {
 		this.ctx.moveTo(point.x, point.y);
 	}
 
-	private handleMouseMove(event: MouseEvent): void {
+	private handlePointerMove(event: PointerEvent): void {
 		if (!this.isDrawing) return;
 
 		const rect = this.canvas.getBoundingClientRect();
@@ -215,36 +211,8 @@ export class GestureCreationModal extends Modal {
 		this.ctx.stroke();
 	}
 
-	private handleMouseUp(): void {
+	private handlePointerUp(): void {
 		this.isDrawing = false;
-	}
-
-	/**
-	 * Converts touch events to mouse events for mobile support
-	 */
-	private handleTouchStart(event: TouchEvent): void {
-		event.preventDefault();
-		const touch = event.touches[0];
-		const mouseEvent = new MouseEvent('mousedown', {
-			clientX: touch.clientX,
-			clientY: touch.clientY
-		});
-		this.handleMouseDown(mouseEvent);
-	}
-
-	private handleTouchMove(event: TouchEvent): void {
-		event.preventDefault();
-		const touch = event.touches[0];
-		const mouseEvent = new MouseEvent('mousemove', {
-			clientX: touch.clientX,
-			clientY: touch.clientY
-		});
-		this.handleMouseMove(mouseEvent);
-	}
-
-	private handleTouchEnd(event: TouchEvent): void {
-		event.preventDefault();
-		this.handleMouseUp();
 	}
 
 	private clearCanvas(): void {

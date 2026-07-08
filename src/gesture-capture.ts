@@ -28,34 +28,6 @@ export class GestureCapture {
 	}
 
 	/**
-	 * Start listening for gesture events
-	 */
-	enable(): void {
-		document.addEventListener('keydown', this.handleKeyDown);
-		document.addEventListener('keyup', this.handleKeyUp);
-		document.addEventListener('mousemove', this.handleMouseMove);
-		document.addEventListener('mousedown', this.handleMouseDown);
-		document.addEventListener('mouseup', this.handleMouseUp);
-
-		// Prevent context menu during gesture capture
-		document.addEventListener('contextmenu', this.handleContextMenu);
-	}
-
-	/**
-	 * Stop listening for gesture events
-	 */
-	disable(): void {
-		document.removeEventListener('keydown', this.handleKeyDown);
-		document.removeEventListener('keyup', this.handleKeyUp);
-		document.removeEventListener('mousemove', this.handleMouseMove);
-		document.removeEventListener('mousedown', this.handleMouseDown);
-		document.removeEventListener('mouseup', this.handleMouseUp);
-		document.removeEventListener('contextmenu', this.handleContextMenu);
-
-		this.stopCapture();
-	}
-
-	/**
 	 * Update capture settings
 	 */
 	updateSettings(settings: Partial<GestureCaptureSettings>): void {
@@ -65,7 +37,7 @@ export class GestureCapture {
 	/**
 	 * Handles keydown events to detect when modifier keys are pressed
 	 */
-	private handleKeyDown = (event: KeyboardEvent): void => {
+	handleKeyDown = (event: KeyboardEvent): void => {
 		// Ignore if a mouse button is already down (click-and-drag protection)
 		if (this.mouseButtonPressed) {
 			return;
@@ -97,11 +69,8 @@ export class GestureCapture {
 		}
 	};
 
-	/**
-	 * Handles mouse movement to capture gesture points
-	 */
-	private handleMouseMove = (event: MouseEvent): void => {
-		// Ignore movement during click-and-drag or other button interactions
+	handlePointerMove = (event: PointerEvent): void => {
+		if (event.pointerType !== 'mouse') return;
 		if (!this.modifierPressed || this.mouseButtonPressed) {
 			return;
 		}
@@ -140,10 +109,8 @@ export class GestureCapture {
 		}
 	};
 
-	/**
-	 * Handles mouse button presses to prevent gesture activation during drag interactions
-	 */
-	private handleMouseDown = (event: MouseEvent): void => {
+	handlePointerDown = (event: PointerEvent): void => {
+		if (event.pointerType !== 'mouse') return;
 		if (event.button === 0) {
 			this.mouseButtonPressed = true;
 			this.modifierPressed = false;
@@ -152,10 +119,8 @@ export class GestureCapture {
 		}
 	};
 
-	/**
-	 * Handles mouse button releases to restore normal gesture behavior
-	 */
-	private handleMouseUp = (event: MouseEvent): void => {
+	handlePointerUp = (event: PointerEvent): void => {
+		if (event.pointerType !== 'mouse') return;
 		if (event.button === 0) {
 			this.mouseButtonPressed = false;
 		}
@@ -164,7 +129,7 @@ export class GestureCapture {
 	/**
 	 * Handles keyup events to detect when modifier keys are released and complete the gesture
 	 */
-	private handleKeyUp = (event: KeyboardEvent): void => {
+	handleKeyUp = (event: KeyboardEvent): void => {
 		// Check if modifier keys are no longer pressed
 		if (!this.areModifierKeysPressed(event)) {
 			this.modifierPressed = false;
@@ -184,7 +149,7 @@ export class GestureCapture {
 	/**
 	 * Prevents context menu from appearing during gesture capture
 	 */
-	private handleContextMenu = (event: Event): void => {
+	handleContextMenu = (event: Event): void => {
 		if (this.isCapturing) {
 			event.preventDefault();
 			event.stopPropagation();
@@ -269,7 +234,7 @@ export class GestureCapture {
 	 * without altKey/ctrlKey being set natively. Treat it as Alt+Ctrl
 	 * when the configured combination requires both.
 	 */
-	private areModifierKeysPressed(event: MouseEvent | KeyboardEvent): boolean {
+	private areModifierKeysPressed(event: PointerEvent | KeyboardEvent): boolean {
 		const required = this.settings.modifierKeys;
 
 		const isAltGraph = 'key' in event && event.key === 'AltGraph';

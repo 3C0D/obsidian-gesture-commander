@@ -51,12 +51,6 @@ export default class GestureCommanderPlugin extends Plugin {
 		this.addSettingTab(this.settingsTab);
 	}
 
-	onunload(): void {
-		if (this.gestureCapture) {
-			this.gestureCapture.disable();
-		}
-	}
-
 	private initializeGestureCapture(): void {
 		const captureSettings = {
 			modifierKeys: this.settings.modifierKeys,
@@ -70,7 +64,25 @@ export default class GestureCommanderPlugin extends Plugin {
 			(stroke: GestureStroke) => this.gestureManager.handleGestureComplete(stroke)
 		);
 
-		this.gestureCapture.enable();
+		this.registerAllWindows();
+	}
+
+	private registerGestureEvents(doc: Document): void {
+		this.registerDomEvent(doc, 'keydown', this.gestureCapture.handleKeyDown as EventListener);
+		this.registerDomEvent(doc, 'keyup', this.gestureCapture.handleKeyUp as EventListener);
+		this.registerDomEvent(doc, 'pointermove', this.gestureCapture.handlePointerMove as EventListener, true);
+		this.registerDomEvent(doc, 'pointerdown', this.gestureCapture.handlePointerDown as EventListener, true);
+		this.registerDomEvent(doc, 'pointerup', this.gestureCapture.handlePointerUp as EventListener, true);
+		this.registerDomEvent(doc, 'contextmenu', this.gestureCapture.handleContextMenu as EventListener);
+	}
+
+	private registerAllWindows(): void {
+		this.registerGestureEvents(document);
+		this.registerEvent(
+			this.app.workspace.on('window-open', (win) => {
+				this.registerGestureEvents(win.doc);
+			})
+		);
 	}
 
 	/**
