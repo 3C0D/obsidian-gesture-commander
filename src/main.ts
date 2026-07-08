@@ -113,9 +113,9 @@ export default class GestureCommanderPlugin extends Plugin {
    * Executes an Obsidian command by ID using the internal commands API
    */
   private executeCommand(commandId: string): void {
-    const command = (this.app as any).commands.commands[commandId];
+    const command = this.app.commands.commands[commandId];
     if (command) {
-      (this.app as any).commands.executeCommandById(commandId);
+      this.app.commands.executeCommandById(commandId);
     } else {
       new Notice(`Command "${commandId}" not found`);
     }

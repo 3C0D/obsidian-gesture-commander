@@ -16,8 +16,8 @@ export class CommandSuggest extends AbstractInputSuggest<Command> {
 
   private loadCommands(): void {
     // Get all available commands from Obsidian
-    const commandsMap = (this.app as any).commands.commands;
-    this.commands = Object.values(commandsMap).map((cmd: any) => ({
+    const commandsMap = this.app.commands.commands;
+    this.commands = Object.values(commandsMap).map((cmd: Command) => ({
       id: cmd.id,
       name: cmd.name || cmd.id
     }));

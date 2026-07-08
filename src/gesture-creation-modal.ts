@@ -437,7 +437,7 @@ export class GestureCreationModal extends Modal {
   }
 
   private getAvailableCommands(): Command[] {
-    return Object.values((this.app as any).commands.commands);
+    return Object.values(this.app.commands.commands);
   }
 
   private findCommandById(commandId: string): Command | null {
