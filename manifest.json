@@ -1,10 +1,10 @@
 {
-  "id": "obsidian-gesture-commander",
-  "name": "Gesture Commander",
-  "version": "1.0.0",
-  "minAppVersion": "1.8.9",
-  "description": "Execute commands by drawing mouse gestures while holding modifier keys",
-  "author": "dd200",
-  "authorUrl": "https://github.com/dd200",
-  "isDesktopOnly": false
+	"id": "obsidian-gesture-commander",
+	"name": "Gesture Commander",
+	"version": "1.1.0",
+	"minAppVersion": "1.8.9",
+	"description": "Execute commands by drawing mouse gestures while holding modifier keys",
+	"author": "dd200",
+	"authorUrl": "https://github.com/dd200",
+	"isDesktopOnly": false
 }
