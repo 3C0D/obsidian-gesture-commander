@@ -362,6 +362,14 @@
     font-family: var(--font-monospace);
 }
 
+/* Gesture toggle labels in mapping list */
+.gesture-toggle-label {
+    font-size: var(--font-ui-smaller);
+    opacity: 0.7;
+    margin-right: 4px;
+    align-self: center;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
 

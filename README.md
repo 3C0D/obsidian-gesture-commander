@@ -40,8 +40,8 @@ Execute Obsidian commands by drawing mouse gestures while holding modifier keys.
 ### Using Gestures
 
 1. Hold your configured modifier key(s)
-2. Click and drag in the editor to draw your gesture
-3. Release the mouse button to complete the gesture
+2. Move the mouse in the editor without clicking to draw your gesture
+3. Release the modifier key(s) to complete the gesture
 4. The mapped command will execute if the gesture is recognized
 
 ## Configuration
@@ -52,6 +52,10 @@ Execute Obsidian commands by drawing mouse gestures while holding modifier keys.
 - **Shift Key**: Require Shift to be pressed (default: disabled)
 - **Ctrl Key**: Require Ctrl to be pressed (default: disabled)
 - **Meta Key**: Require Cmd/Win key to be pressed (default: disabled)
+
+> **Note:** Ctrl+Alt is equivalent to AltGr.
+
+> **Note:** At least one modifier key must remain enabled.
 
 ### Capture Settings
 

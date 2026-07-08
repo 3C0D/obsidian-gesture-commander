@@ -84,6 +84,16 @@ export class GestureCapture {
 					document.body.style.cursor = 'crosshair';
 				}
 			}
+		} else if (this.modifierPressed) {
+			// An extra modifier was added on top of an already-matching combination
+			// (e.g. Alt matched first, then Ctrl was pressed too), so the current
+			// key state no longer matches exactly. Reset instead of leaving
+			// modifierPressed stuck true, which would let the next mouse move
+			// wrongly start a gesture.
+			this.modifierPressed = false;
+			this.hasMovedWhilePressed = false;
+			document.body.style.cursor = '';
+			this.stopCapture();
 		}
 	};
 
@@ -254,12 +264,14 @@ export class GestureCapture {
 	/**
 	 * Checks if the modifier state exactly matches the configured combination.
 	 * This prevents a broader combination from activating a narrower one.
+	 *
+	 * AltGr is sometimes reported by the browser as key === 'AltGraph'
+	 * without altKey/ctrlKey being set natively. Treat it as Alt+Ctrl
+	 * when the configured combination requires both.
 	 */
 	private areModifierKeysPressed(event: MouseEvent | KeyboardEvent): boolean {
 		const required = this.settings.modifierKeys;
 
-		// Check for AltGraph key (detected as key === 'AltGraph')
-		// AltGraph should only be treated as active when both Alt and Ctrl are required.
 		const isAltGraph = 'key' in event && event.key === 'AltGraph';
 		const altGraphMatches = isAltGraph && required.alt && required.ctrl;
 

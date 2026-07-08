@@ -13,6 +13,7 @@ export class GestureCreationModal extends Modal {
 	selectedCommand: Command | null = null;
 	existingMapping: GestureMapping | null = null;
 	commandSuggest: CommandSuggest | null = null;
+	showNotice = true;
 
 	constructor(
 		app: App,
@@ -26,6 +27,7 @@ export class GestureCreationModal extends Modal {
 		if (this.existingMapping) {
 			this.gestureName = this.existingMapping.gestureName;
 			this.selectedCommand = this.findCommandById(this.existingMapping.commandId);
+			this.showNotice = this.existingMapping.showNotice ?? true;
 		}
 	}
 
@@ -38,6 +40,7 @@ export class GestureCreationModal extends Modal {
 		});
 
 		this.createCommandSelector(contentEl);
+		this.createNoticeToggle(contentEl);
 		this.createDrawingCanvas(contentEl);
 		this.createActionButtons(contentEl);
 
@@ -94,6 +97,17 @@ export class GestureCreationModal extends Modal {
 					}
 				});
 			});
+	}
+
+	private createNoticeToggle(containerEl: HTMLElement): void {
+		new Setting(containerEl)
+			.setName('Show notice on execution')
+			.setDesc('Display a notification when this gesture executes its command')
+			.addToggle((toggle) =>
+				toggle.setValue(this.showNotice).onChange((value) => {
+					this.showNotice = value;
+				})
+			);
 	}
 
 	private createDrawingCanvas(containerEl: HTMLElement): void {
@@ -261,7 +275,11 @@ export class GestureCreationModal extends Modal {
 			}
 
 			// Add gesture to recognizer with original canvas points
-			this.plugin.gestureRecognizer.addGesture(this.gestureName, this.points);
+			this.plugin.gestureRecognizer.addGesture(
+				this.gestureName,
+				this.points,
+				this.plugin.settings.enableSmoothing
+			);
 
 			// Create or update mapping with original points for preview
 			const mapping: GestureMapping = {
@@ -269,8 +287,9 @@ export class GestureCreationModal extends Modal {
 				gestureName: this.gestureName,
 				commandId: this.selectedCommand.id,
 				commandName: this.selectedCommand.name || this.selectedCommand.id,
-				enabled: true,
-				minScore: 0.55,
+				enabled: this.existingMapping?.enabled ?? true,
+				minScore: this.existingMapping?.minScore ?? 0.55,
+				showNotice: this.showNotice,
 				originalPoints: [...this.points] // Store original points for preview
 			};
 
@@ -421,6 +440,6 @@ export class GestureCreationModal extends Modal {
 	}
 
 	private generateId(): string {
-		return 'gesture-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+		return 'gesture-' + Date.now() + '-' + Math.random().toString(36).slice(2, 11);
 	}
 }

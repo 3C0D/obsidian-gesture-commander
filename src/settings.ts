@@ -40,6 +40,16 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 				toggle
 					.setValue(this.plugin.settings.modifierKeys.alt)
 					.onChange(async (value) => {
+						if (
+							!value &&
+							!this.plugin.settings.modifierKeys.shift &&
+							!this.plugin.settings.modifierKeys.ctrl &&
+							!this.plugin.settings.modifierKeys.meta
+						) {
+							toggle.setValue(true);
+							new Notice('At least one modifier must stay enabled');
+							return;
+						}
 						this.plugin.settings.modifierKeys.alt = value;
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
@@ -53,6 +63,16 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 				toggle
 					.setValue(this.plugin.settings.modifierKeys.shift)
 					.onChange(async (value) => {
+						if (
+							!value &&
+							!this.plugin.settings.modifierKeys.alt &&
+							!this.plugin.settings.modifierKeys.ctrl &&
+							!this.plugin.settings.modifierKeys.meta
+						) {
+							toggle.setValue(true);
+							new Notice('At least one modifier must stay enabled');
+							return;
+						}
 						this.plugin.settings.modifierKeys.shift = value;
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
@@ -66,6 +86,16 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 				toggle
 					.setValue(this.plugin.settings.modifierKeys.ctrl)
 					.onChange(async (value) => {
+						if (
+							!value &&
+							!this.plugin.settings.modifierKeys.alt &&
+							!this.plugin.settings.modifierKeys.shift &&
+							!this.plugin.settings.modifierKeys.meta
+						) {
+							toggle.setValue(true);
+							new Notice('At least one modifier must stay enabled');
+							return;
+						}
 						this.plugin.settings.modifierKeys.ctrl = value;
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
@@ -79,6 +109,16 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 				toggle
 					.setValue(this.plugin.settings.modifierKeys.meta)
 					.onChange(async (value) => {
+						if (
+							!value &&
+							!this.plugin.settings.modifierKeys.alt &&
+							!this.plugin.settings.modifierKeys.shift &&
+							!this.plugin.settings.modifierKeys.ctrl
+						) {
+							toggle.setValue(true);
+							new Notice('At least one modifier must stay enabled');
+							return;
+						}
 						this.plugin.settings.modifierKeys.meta = value;
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
@@ -134,6 +174,20 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 						this.plugin.settings.enableVisualFeedback = value;
 						await this.plugin.saveSettings();
 						this.plugin.updateGestureCapture();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Smooth gestures')
+			.setDesc(
+				'Reduce mouse/trackpad jitter before recognition, using a moving average over the drawn path. Applies to both new gestures and live recognition; does not affect the on-screen trail while drawing.'
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.enableSmoothing)
+					.onChange(async (value) => {
+						this.plugin.settings.enableSmoothing = value;
+						await this.plugin.saveSettings();
 					})
 			);
 	}
@@ -225,41 +279,59 @@ export class GestureCommanderSettingTab extends PluginSettingTab {
 			gestureInfo.createDiv('gesture-score').textContent =
 				`Min score: ${(mapping.minScore * 100).toFixed(0)}%`;
 
-			setting
-				.setDesc(`Command: ${mapping.commandName}`)
-				.addToggle((toggle) =>
-					toggle.setValue(mapping.enabled).onChange(async (value) => {
+			setting.setDesc(`Command: ${mapping.commandName}`);
+
+			// Explicit text labels before each toggle, tooltips alone aren't visible without hovering
+			setting.controlEl.createSpan({ text: 'Enabled', cls: 'gesture-toggle-label' });
+			setting.addToggle((toggle) =>
+				toggle
+					.setTooltip('Enabled')
+					.setValue(mapping.enabled)
+					.onChange(async (value) => {
 						mapping.enabled = value;
 						await this.plugin.saveSettings();
 					})
-				)
-				.addButton((button) =>
-					button.setButtonText('Edit').onClick(() => {
-						this.plugin.openGestureEditModal(mapping);
+			);
+
+			setting.controlEl.createSpan({ text: 'Notify', cls: 'gesture-toggle-label' });
+			setting.addToggle((toggle) =>
+				toggle
+					.setTooltip('Show notice on execution')
+					.setValue(mapping.showNotice)
+					.onChange(async (value) => {
+						mapping.showNotice = value;
+						await this.plugin.saveSettings();
 					})
-				)
-				.addButton((button) =>
-					button
-						.setButtonText('Delete')
-						.setWarning()
-						.onClick(async () => {
-							const confirmed = await confirmation(
-								this.app,
-								'Are you sure you want to delete this gesture mapping?'
+			);
+
+			setting.addButton((button) =>
+				button.setButtonText('Edit').onClick(() => {
+					this.plugin.openGestureEditModal(mapping);
+				})
+			);
+
+			setting.addButton((button) =>
+				button
+					.setButtonText('Delete')
+					.setWarning()
+					.onClick(async () => {
+						const confirmed = await confirmation(
+							this.app,
+							'Are you sure you want to delete this gesture mapping?'
+						);
+						if (confirmed) {
+							// Remove from recognizer
+							this.plugin.gestureRecognizer.removeTemplatesByName(
+								mapping.gestureName
 							);
-							if (confirmed) {
-								// Remove from recognizer
-								this.plugin.gestureRecognizer.removeTemplatesByName(
-									mapping.gestureName
-								);
-								// Remove from settings
-								this.plugin.settings.gestureMappings.splice(index, 1);
-								await this.plugin.saveSettings();
-								this.refreshGestureMappingsInternal(container);
-								new Notice('Gesture mapping deleted');
-							}
-						})
-				);
+							// Remove from settings
+							this.plugin.settings.gestureMappings.splice(index, 1);
+							await this.plugin.saveSettings();
+							this.refreshGestureMappingsInternal(container);
+							new Notice('Gesture mapping deleted');
+						}
+					})
+			);
 		});
 	}
 

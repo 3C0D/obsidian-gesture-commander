@@ -61,6 +61,7 @@ export interface GestureMapping {
 	commandName: string;
 	enabled: boolean;
 	minScore: number;
+	showNotice: boolean;
 	originalPoints?: Point[];
 }
 
@@ -72,6 +73,7 @@ export interface GestureCommanderSettings {
 	gestureMappings: GestureMapping[];
 	recognitionThreshold: number;
 	useProtractor: boolean;
+	enableSmoothing: boolean;
 }
 
 // --- Obsidian commands ---

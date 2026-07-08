@@ -50,5 +50,6 @@ export const DEFAULT_SETTINGS = {
 	enableVisualFeedback: true,
 	gestureMappings: [],
 	recognitionThreshold: 0.6,
-	useProtractor: false
+	useProtractor: false,
+	enableSmoothing: true
 };

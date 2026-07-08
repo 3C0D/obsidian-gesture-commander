@@ -33,7 +33,8 @@ export class GestureManager {
 	handleGestureComplete(stroke: GestureStroke): void {
 		const result = this.recognizer.recognize(
 			stroke.points,
-			this.settings.useProtractor
+			this.settings.useProtractor,
+			this.settings.enableSmoothing
 		);
 
 		if (result.score >= this.settings.recognitionThreshold) {
@@ -41,9 +42,11 @@ export class GestureManager {
 
 			if (mapping) {
 				this.executeCommandCallback(mapping.commandId);
-				new Notice(
-					`Command executed: ${mapping.commandName} (${(result.score * 100).toFixed(1)}%)`
-				);
+				if (mapping.showNotice !== false) {
+					new Notice(
+						`Command executed: ${mapping.commandName} (${(result.score * 100).toFixed(1)}%)`
+					);
+				}
 			} else {
 				new Notice(
 					`Gesture recognized as "${result.name}" but no command mapped (${(result.score * 100).toFixed(1)}%)`
@@ -82,7 +85,11 @@ export class GestureManager {
 		// Reload all gestures from settings
 		this.settings.gestureMappings.forEach((mapping) => {
 			if (mapping.originalPoints && mapping.originalPoints.length > 0) {
-				this.recognizer.addGesture(mapping.gestureName, mapping.originalPoints);
+				this.recognizer.addGesture(
+					mapping.gestureName,
+					mapping.originalPoints,
+					this.settings.enableSmoothing
+				);
 			}
 		});
 	}
